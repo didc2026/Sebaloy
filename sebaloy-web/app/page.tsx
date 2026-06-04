@@ -128,7 +128,7 @@ export default function Home() {
                 </p>
 
                 <p className="text-teal-600 font-bold mt-3">
-                  ৳ {product.PRICE}
+                  ৳ {product.price}
                 </p>
 
                 <p className="text-sm text-gray-500 mt-2">
