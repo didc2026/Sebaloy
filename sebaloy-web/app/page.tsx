@@ -17,6 +17,10 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+const [phone, setPhone] = useState("");
+const [address, setAddress] = useState("");
+const [showCheckout, setShowCheckout] = useState(false);
   useEffect(() => {
   const savedCart = localStorage.getItem("cart");
 
@@ -52,6 +56,15 @@ useEffect(() => {
   const filteredProducts = products.filter((product) =>
     product.name?.toLowerCase().includes(search.toLowerCase())
   );
+  const placeOrder = () => {
+  alert("Order Submitted!");
+
+  setName("");
+  setPhone("");
+  setAddress("");
+  setCart([]);
+  localStorage.removeItem("cart");
+};
 
   if (loading) {
     return (
@@ -80,9 +93,45 @@ useEffect(() => {
         <p className="text-red-600">
   Total: ৳{cart.reduce((sum, item) => sum + item.price, 0)}
 </p>
-<div className="border p-4 mb-4 bg-white rounded">
+<button
+  onClick={() => setShowCheckout(!showCheckout)}
+  className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+>
+  Checkout
+</button>
+{showCheckout && (
+  <div className="border p-4 mb-4 bg-white rounded">
+    <h3>Customer Information</h3>
 
-</div>
+    <input
+      placeholder="Name"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      className="border p-2 rounded w-full mb-2"
+    />
+
+    <input
+      placeholder="Phone"
+      value={phone}
+      onChange={(e) => setPhone(e.target.value)}
+      className="border p-2 rounded w-full mb-2"
+    />
+
+    <input
+      placeholder="Address"
+      value={address}
+      onChange={(e) => setAddress(e.target.value)}
+      className="border p-2 rounded w-full mb-2"
+    />
+
+    <button
+      onClick={placeOrder}
+      className="bg-green-600 text-white px-4 py-2 rounded"
+    >
+      Place Order
+    </button>
+  </div>
+)}
 {cart.map((item, index) => (
   <div key={index}>
     {item.name} - ৳{item.price}
