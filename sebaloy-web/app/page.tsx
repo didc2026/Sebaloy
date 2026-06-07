@@ -4,9 +4,29 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+};
+
 export default function Home() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [cart, setCart] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+  const savedCart = localStorage.getItem("cart");
+
+  if (savedCart) {
+    setCart(JSON.parse(savedCart));
+  }
+}, []);
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -15,12 +35,14 @@ export default function Home() {
 
         const data = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          ...(doc.data() as Omit<Product, "id">),
         }));
 
         setProducts(data);
       } catch (error) {
         console.error("Firestore Error:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -30,6 +52,19 @@ export default function Home() {
   const filteredProducts = products.filter((product) =>
     product.name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-teal-600 mb-2">
+            Sebaloy
+          </div>
+          <p className="text-gray-500">Loading products...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-100 p-8">
@@ -41,7 +76,27 @@ export default function Home() {
         <p className="text-gray-600 mb-6">
           Total Products: {filteredProducts.length}
         </p>
+        <p className="text-green-600">Cart Items: {cart.length}</p>
+        <p className="text-red-600">
+  Total: ৳{cart.reduce((sum, item) => sum + item.price, 0)}
+</p>
+<div className="border p-4 mb-4 bg-white rounded">
 
+</div>
+{cart.map((item, index) => (
+  <div key={index}>
+    {item.name} - ৳{item.price}
+
+    <button
+      onClick={() =>
+        setCart(cart.filter((_, i) => i !== index))
+      }
+      style={{ marginLeft: "10px" }}
+    >
+      Remove
+    </button>
+  </div>
+))}
         <input
           type="text"
           placeholder="Search medicines..."
@@ -76,19 +131,20 @@ export default function Home() {
                 Stock: {product.stock}
               </p>
 
-              <button className="w-full mt-4 bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">
-                Add to Cart
-              </button>
-            </div>
-          ))}
-        </div>
+<button
+onClick={() => setCart([...cart, product])}
+  className="w-full mt-4 bg-teal-600 text-white py-2 rounded-lg"
+>  Add to Cart
+</button>
+ </div> ))}
+</div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center mt-10 text-red-500">
-            No products found.
-          </div>
-        )}
-      </div>
-    </main>
-  );
+{!loading && filteredProducts.length === 0 && (
+<div className="text-center mt-10 text-red-500">
+No products found.
+ </div>
+)}
+</div>
+</main>
+ );
 }
