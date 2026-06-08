@@ -95,9 +95,8 @@ const fetchOrders = async () => {
   ) => {
     e.preventDefault();
 
-    try {
-      let imageUrl = "";
-
+try {
+  let currentImageUrl = imageUrl || "";
 if (imageFile) {
   console.log("Selected file:", imageFile.name);
 
@@ -115,7 +114,7 @@ if (imageFile) {
 
   console.log("Upload Success");
 
-  imageUrl =
+currentImageUrl =
     await getDownloadURL(imageRef);
 
   console.log("Image URL:", imageUrl);
@@ -128,10 +127,9 @@ if (imageFile) {
           stock: Number(stock),
         };
 
-        if (imageUrl) {
-          updateData.imageUrl = imageUrl;
-        }
-
+if (currentImageUrl) {
+  updateData.imageUrl = currentImageUrl;
+}
         await updateDoc(
           doc(db, "products", editingId),
           updateData
@@ -146,7 +144,7 @@ if (imageFile) {
             category,
             price: Number(price),
             stock: Number(stock),
-            imageUrl,
+            currentImageUrl,
             createdAt: Date.now(),
           }
         );
@@ -169,6 +167,7 @@ const editProduct = (product: any) => {    setEditingId(product.id);
     setCategory(product.category);
     setPrice(String(product.price));
     setStock(String(product.stock));
+    setImageUrl(product.imageUrl || "");
 
     window.scrollTo({
       top: 0,
