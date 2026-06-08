@@ -29,13 +29,14 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [imageFile, setImageFile] =
     useState<File | null>(null);
 
   const [products, setProducts] = useState<any[]>([]);
   const [editingId, setEditingId] = useState("");
-  const [orders, setOrders] = useState<any[]>([]);S
+  const [orders, setOrders] = useState<any[]>([]);
 
   const logout = async () => {
     await signOut(auth);
@@ -84,6 +85,7 @@ const fetchOrders = async () => {
     setCategory("");
     setPrice("");
     setStock("");
+    setImageUrl("");
     setImageFile(null);
     setEditingId("");
   };
@@ -96,21 +98,28 @@ const fetchOrders = async () => {
     try {
       let imageUrl = "";
 
-      if (imageFile) {
-        const imageRef = ref(
-          storage,
-          `products/${Date.now()}-${imageFile.name}`
-        );
+if (imageFile) {
+  console.log("Selected file:", imageFile.name);
 
-        await uploadBytes(
-          imageRef,
-          imageFile
-        );
+  const imageRef = ref(
+    storage,
+    `products/${Date.now()}-${imageFile.name}`
+  );
 
-        imageUrl =
-          await getDownloadURL(imageRef);
-      }
+  console.log("Uploading...");
 
+  await uploadBytes(
+    imageRef,
+    imageFile
+  );
+
+  console.log("Upload Success");
+
+  imageUrl =
+    await getDownloadURL(imageRef);
+
+  console.log("Image URL:", imageUrl);
+}
       if (editingId) {
         const updateData: any = {
           name,
@@ -145,16 +154,17 @@ const fetchOrders = async () => {
         alert("Product Added");
       }
 
-      resetForm();
-      fetchProducts();
-    } catch (error) {
-      console.error(error);
-      alert("Operation Failed");
-    }
-  };
+resetForm();
+fetchProducts();
 
-  const editProduct = (product: any) => {
-    setEditingId(product.id);
+} catch (error: any) {
+  console.error(error);
+
+  alert(error.message);
+}
+};
+
+const editProduct = (product: any) => {    setEditingId(product.id);
     setName(product.name);
     setCategory(product.category);
     setPrice(String(product.price));
@@ -165,6 +175,26 @@ const fetchOrders = async () => {
       behavior: "smooth",
     });
   };
+  const deleteOrder = async (id: string) => {
+  const ok = window.confirm(
+    "Are you sure you want to delete this order?"
+  );
+
+  if (!ok) return;
+
+  try {
+    await deleteDoc(doc(db, "orders", id));
+
+    setOrders((prev) =>
+      prev.filter((order) => order.id !== id)
+    );
+
+    alert("Order deleted successfully");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete order");
+  }
+};
 
   const deleteProduct = async (
     id: string
@@ -255,7 +285,13 @@ const fetchOrders = async () => {
           className="w-full border p-3 rounded"
           required
         />
-
+<input
+  type="text"
+  placeholder="Image URL"
+  value={imageUrl}
+  onChange={(e) => setImageUrl(e.target.value)}
+  className="w-full border p-3 rounded"
+/>
         <input
           type="file"
           accept="image/*"
@@ -285,11 +321,17 @@ const fetchOrders = async () => {
     <div
       key={order.id}
       className="bg-white border rounded-lg p-4"
-    >
+   >
       <p><strong>Name:</strong> {order.name}</p>
-      <p><strong>Phone:</strong> {order.phone}</p>
+    <p><strong>Phone:</strong> {order.phone}</p>
       <p><strong>Address:</strong> {order.address}</p>
       <p><strong>Total:</strong> ৳{order.total}</p>
+      <button
+onClick={() => deleteOrder(order.id)}
+  className="bg-red-500 text-white px-3 py-1 rounded mt-2"
+>
+  Delete Order
+</button>
     </div>
   ))}
 </div>
@@ -310,7 +352,7 @@ const fetchOrders = async () => {
                 className="w-full h-52 object-cover rounded mb-4"
               />
             )}
-
+<p>Image URL: {product.imageUrl}</p>
             <h3 className="text-xl font-bold">
               {product.name}
             </h3>
