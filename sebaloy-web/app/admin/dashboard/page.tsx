@@ -35,6 +35,7 @@ export default function Dashboard() {
 
   const [products, setProducts] = useState<any[]>([]);
   const [editingId, setEditingId] = useState("");
+  const [orders, setOrders] = useState<any[]>([]);S
 
   const logout = async () => {
     await signOut(auth);
@@ -57,9 +58,25 @@ export default function Dashboard() {
       console.error(error);
     }
   };
+const fetchOrders = async () => {
+  try {
+    const snapshot = await getDocs(
+      collection(db, "orders")
+    );
 
+    const data = snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data(),
+    }));
+
+    setOrders(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
   useEffect(() => {
     fetchProducts();
+    fetchOrders();
   }, []);
 
   const resetForm = () => {
@@ -259,7 +276,23 @@ export default function Dashboard() {
             : "Add Product"}
         </button>
       </form>
+<h2 className="text-2xl font-bold mb-4 mt-8">
+  Orders
+</h2>
 
+<div className="space-y-4 mb-8">
+  {orders.map((order: any) => (
+    <div
+      key={order.id}
+      className="bg-white border rounded-lg p-4"
+    >
+      <p><strong>Name:</strong> {order.name}</p>
+      <p><strong>Phone:</strong> {order.phone}</p>
+      <p><strong>Address:</strong> {order.address}</p>
+      <p><strong>Total:</strong> ৳{order.total}</p>
+    </div>
+  ))}
+</div>
       <h2 className="text-2xl font-bold mb-4">
         Product List
       </h2>

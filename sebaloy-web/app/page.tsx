@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type Product = {
@@ -56,16 +56,31 @@ useEffect(() => {
   const filteredProducts = products.filter((product) =>
     product.name?.toLowerCase().includes(search.toLowerCase())
   );
-  const placeOrder = () => {
-  alert("Order Submitted!");
+const placeOrder = async () => {
+  try {
+    await addDoc(collection(db, "orders"), {
+      name,
+      phone,
+      address,
+      cart,
+      total: cart.reduce((sum, item) => sum + item.price, 0),
+      createdAt: new Date(),
+    });
 
-  setName("");
-  setPhone("");
-  setAddress("");
-  setCart([]);
-  localStorage.removeItem("cart");
+    alert("Order Submitted!");
+
+    setName("");
+    setPhone("");
+    setAddress("");
+    setCart([]);
+    localStorage.removeItem("cart");
+    setShowCheckout(false);
+
+  } catch (error) {
+    console.error(error);
+    alert("Order Failed");
+  }
 };
-
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-100 flex items-center justify-center">
