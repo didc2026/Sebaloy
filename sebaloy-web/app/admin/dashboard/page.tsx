@@ -117,8 +117,7 @@ if (imageFile) {
 currentImageUrl =
     await getDownloadURL(imageRef);
 
-  console.log("Image URL:", imageUrl);
-}
+console.log("Image URL:", currentImageUrl);}
       if (editingId) {
         const updateData: any = {
           name,
@@ -137,18 +136,17 @@ if (currentImageUrl) {
 
         alert("Product Updated");
       } else {
-        await addDoc(
-          collection(db, "products"),
-          {
-            name,
-            category,
-            price: Number(price),
-            stock: Number(stock),
-            currentImageUrl,
-            createdAt: Date.now(),
-          }
-        );
-
+await addDoc(
+  collection(db, "products"),
+  {
+    name,
+    category,
+    price: Number(price),
+    stock: Number(stock),
+    imageUrl: currentImageUrl,
+    createdAt: Date.now(),
+  }
+);
         alert("Product Added");
       }
 
