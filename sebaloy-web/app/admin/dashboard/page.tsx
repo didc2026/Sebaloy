@@ -21,6 +21,7 @@ import {
 } from "firebase/storage";
 
 import { auth, db, storage } from "@/lib/firebase";
+console.log("Dashboard Loaded");
 
 export default function Dashboard() {
   const router = useRouter();

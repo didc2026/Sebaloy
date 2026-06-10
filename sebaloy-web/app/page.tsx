@@ -58,6 +58,12 @@ useEffect(() => {
   );
 const placeOrder = async () => {
   try {
+    console.log("ORDER CART:", cart);
+    console.log(
+      "ORDER TOTAL:",
+      cart.reduce((sum, item) => sum + item.price, 0)
+    );
+
     await addDoc(collection(db, "orders"), {
       name,
       phone,
@@ -77,11 +83,9 @@ const placeOrder = async () => {
     setShowCheckout(false);
 
   } catch (error) {
-    console.error(error);
-    alert("Order Failed");
+    console.error("Order Error:", error);
   }
-};
-  if (loading) {
+};  if (loading) {
     return (
       <main className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-center">
