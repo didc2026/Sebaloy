@@ -173,10 +173,9 @@ const placeOrder = async () => {
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-xl shadow-md p-5"
-            >
-<div className="h-64 bg-gray-100 rounded-lg overflow-hidden mb-4">
-    {product.imageUrl ? (
+className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition p-5"            >
+<div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+      {product.imageUrl ? (
     <img
       src={product.imageUrl}
       alt={product.name}
@@ -187,8 +186,8 @@ className="w-full h-full object-contain"    />
     </div>
   )}
 </div>
-              <h2 className="text-xl font-bold mb-2">
-                {product.name}
+<h2 className="text-lg font-semibold mb-2">
+                  {product.name}
               </h2>
 
               <p className="text-gray-600">
