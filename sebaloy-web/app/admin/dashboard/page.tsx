@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { signOut } from "firebase/auth";
-
+import {
+  signOut,
+  onAuthStateChanged
+} from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -76,11 +78,22 @@ const fetchOrders = async () => {
     console.error(error);
   }
 };
-  useEffect(() => {
-    fetchProducts();
-    fetchOrders();
-  }, []);
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(
+    auth,
+    (user) => {
+      if (!user) {
+        router.push("/admin/login");
+        return;
+      }
 
+      fetchProducts();
+      fetchOrders();
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
   const resetForm = () => {
     setName("");
     setCategory("");

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 type Product = {
   id: string;
@@ -13,6 +14,7 @@ type Product = {
   imageUrl?: string;
 };
 export default function Home() {
+  const router = useRouter();
   const [cart, setCart] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -175,16 +177,18 @@ const placeOrder = async () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition p-5"            >
-<div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+<div
+  key={product.id}
+  onClick={() => router.push(`/product/${product.id}`)}
+  className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition p-5 cursor-pointer"
+>
+  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
       {product.imageUrl ? (
     <img
       src={product.imageUrl}
       alt={product.name}
-className="w-full h-full object-contain"    />
-  ) : (
+className="w-full h-full object-contain" />
+) : (
     <div className="h-full flex items-center justify-center">
       Product Image
     </div>
