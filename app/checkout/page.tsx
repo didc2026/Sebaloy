@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function CheckoutPage() {
   const router = useRouter();
-
   const { cartItems, clearCart } = useCart();
 
   const [name, setName] = useState("");
@@ -29,10 +28,10 @@ export default function CheckoutPage() {
     try {
       await addDoc(collection(db, "orders"), {
         customerName: name,
-        phone: phone,
-        address: address,
+        phone,
+        address,
         items: cartItems,
-        total: total,
+        total,
         status: "pending",
         createdAt: new Date(),
       });
@@ -40,7 +39,6 @@ export default function CheckoutPage() {
       alert("অর্ডার সফল হয়েছে");
 
       clearCart();
-
       router.push("/");
     } catch (error) {
       console.error(error);
