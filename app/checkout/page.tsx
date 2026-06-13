@@ -20,43 +20,42 @@ export default function CheckoutPage() {
     0
   );
 
-const placeOrder = async () => {
-  if (!name || !phone || !address) {
-    alert("সব তথ্য পূরণ করুন");
-    return;
-  }
+  const placeOrder = async () => {
+    if (!name || !phone || !address) {
+      alert("সব তথ্য পূরণ করুন");
+      return;
+    }
 
-  try {
-    await addDoc(collection(db, "orders"), {
-      customerName: name,
-      phone: phone,
-      address: address,
-      items: cartItems,
-      total: total,
-      status: "pending",
-      createdAt: new Date(),
-    });
+    try {
+      await addDoc(collection(db, "orders"), {
+        customerName: name,
+        phone: phone,
+        address: address,
+        items: cartItems,
+        total: total,
+        status: "pending",
+        createdAt: new Date(),
+      });
 
-    alert("অর্ডার সফল হয়েছে");
+      alert("অর্ডার সফল হয়েছে");
 
-    clearCart();
+      clearCart();
 
-    router.push("/");
-  } catch (error) {
-    console.error(error);
-    alert("অর্ডার সেভ হয়নি");
-  }
-};
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+      alert("অর্ডার সেভ হয়নি");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-100 p-8">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-8">
-
         <h1 className="text-3xl font-bold mb-6">
           Checkout
         </h1>
 
         <div className="space-y-4">
-
           <input
             type="text"
             placeholder="Full Name"
@@ -79,11 +78,9 @@ const placeOrder = async () => {
             onChange={(e) => setAddress(e.target.value)}
             className="w-full border p-3 rounded-lg"
           />
-
         </div>
 
         <div className="mt-8 border-t pt-6">
-
           <h2 className="text-xl font-bold mb-4">
             Order Summary
           </h2>
@@ -113,9 +110,7 @@ const placeOrder = async () => {
           >
             Place Order
           </button>
-
         </div>
-
       </div>
     </main>
   );
