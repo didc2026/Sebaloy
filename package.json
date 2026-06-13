@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "sebaloy-web",
   "version": "0.1.0",
   "private": true,
@@ -23,5 +24,9 @@
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4.3.0",
     "typescript": "^5"
+=======
+  "dependencies": {
+    "firebase": "^12.14.0"
+>>>>>>> 6fb38c082967adca1bdb2ddc5d585200f7d11602
   }
 }
