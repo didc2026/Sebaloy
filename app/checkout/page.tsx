@@ -3,22 +3,43 @@
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useRouter } from "next/navigation";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";import { db } from "@/lib/firebase";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, clearCart } = useCart();
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [deliveryZone, setDeliveryZone] =
+  useState("dhaka");
 
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+const total = cartItems.reduce(
+  (sum, item) =>
+    sum +
+    (item.price -
+      (item.price * (item.discount || 0)) / 100) *
+      item.quantity,
+  0
+);
+const totalItems = cartItems.reduce(
+  (sum, item) => sum + item.quantity,
+  0
+);
+const deliveryCharge =
+  total >= 2000
+    ? 0
+    : deliveryZone === "dhaka"
+    ? 60
+    : 120;
 
+const grandTotal = total + deliveryCharge;
   const placeOrder = async () => {
     if (!name || !phone || !address) {
       alert("সব তথ্য পূরণ করুন");
@@ -26,20 +47,58 @@ export default function CheckoutPage() {
     }
 
     try {
-      await addDoc(collection(db, "orders"), {
-        customerName: name,
-        phone,
-        address,
-        items: cartItems,
-        total,
-        status: "pending",
-        createdAt: new Date(),
-      });
+      console.log({
+  name,
+  phone,
+  address,
+  cartItems,
+  total,
+  grandTotal,
+  deliveryCharge,
+  deliveryZone,
+});
+console.log({
+  name,
+  phone,
+  address,
+  cartItems,
+  total,
+  grandTotal,
+  deliveryCharge,
+  deliveryZone,
+});
+const orderRef = 
+await addDoc(collection(db, "orders"),
+ { customerName: name,
+  phone,
+  address,
+  items: cartItems,
 
-      alert("অর্ডার সফল হয়েছে");
+  total: grandTotal,
+  subtotal: total,
+  deliveryCharge,
+  deliveryZone,
 
-      clearCart();
-      router.push("/");
+  status: "pending",
+  createdAt: new Date(),
+});
+clearCart();
+for (const item of cartItems) {
+  const productRef = doc(db, "products", item.id);
+
+  const productSnap = await getDoc(productRef);
+  if (productSnap.exists()) {
+    const currentStock =
+      Number(productSnap.data().stock) || 0;
+
+    await updateDoc(productRef, {
+      stock: currentStock - (item.quantity || 1),
+    });
+  }
+}
+localStorage.removeItem("cart");
+router.push(`/order-success?id=${orderRef.id}`);
+return;
     } catch (error) {
       console.error(error);
       alert("অর্ডার সেভ হয়নি");
@@ -47,14 +106,14 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-3xl font-bold mb-6">
-          Checkout
+<main className="max-w-xl mx-auto px-4 py-1">
+  <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-4">
+  <h1 className="text-2xl font-bold mb-2">
+        Checkout
         </h1>
 
-        <div className="space-y-4">
-          <input
+<div className="space-y-2">    
+        <input
             type="text"
             placeholder="Full Name"
             value={name}
@@ -69,19 +128,32 @@ export default function CheckoutPage() {
             onChange={(e) => setPhone(e.target.value)}
             className="w-full border p-3 rounded-lg"
           />
-
           <textarea
-            placeholder="Delivery Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full border p-3 rounded-lg"
-          />
+  placeholder="Delivery Address"
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+  className="w-full border p-3 rounded-lg"
+/>
+
+<select
+  value={deliveryZone}
+  onChange={(e) => setDeliveryZone(e.target.value)}
+  className="w-full border p-2 rounded-lg mt-2"
+>
+  <option value="dhaka">Dhaka City</option>
+  <option value="outside">Outside Dhaka</option>
+</select>
+
+</div>
         </div>
 
-        <div className="mt-8 border-t pt-6">
-          <h2 className="text-xl font-bold mb-4">
-            Order Summary
+<div className="mt-4 border-t pt-3">
+  <h2 className="text-lg font-bold mb-3">
+              Order Summary
           </h2>
+          <p className="text-gray-600 mb-3">
+  Total Items: {totalItems}
+</p>
 
           {cartItems.map((item) => (
             <div
@@ -92,22 +164,41 @@ export default function CheckoutPage() {
                 {item.name} × {item.quantity}
               </span>
 
-              <span>
-                ৳ {item.price * item.quantity}
-              </span>
-            </div>
+<span>
+  ৳{" "}
+  {Math.round(
+    (item.price -
+      (item.price * (item.discount || 0)) / 100) *
+      item.quantity
+  )}
+</span>         
+   </div>
           ))}
 
-          <div className="mt-4 text-2xl font-bold text-teal-600">
-            Total: ৳ {total}
-          </div>
+<div className="mt-4 space-y-2">
+  <div className="flex justify-between">
+    <span>Subtotal</span>
+    <span>৳ {Math.round(total)}</span>
+  </div>
 
-          <button
-            onClick={placeOrder}
-            className="w-full mt-6 bg-teal-600 text-white py-3 rounded-xl"
-          >
-            Place Order
-          </button>
+  <div className="flex justify-between">
+    <span>Delivery Charge</span>
+    <span>৳ {deliveryCharge}</span>
+  </div>
+
+  <hr />
+
+    <div className="flex justify-between text-xl font-bold text-teal-600">
+    <span>Grand Total</span>
+    <span>৳ {Math.round(grandTotal)}</span>
+  </div>
+
+<button
+  onClick={placeOrder}
+  className="w-full mt-4 bg-teal-600 text-white py-2 rounded-xl"
+>
+  Place Order
+</button>
         </div>
       </div>
     </main>
