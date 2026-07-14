@@ -38,7 +38,7 @@ storage: string;
 };
  export default function Home() {
   const router = useRouter();
-  const { addToCart, cartCount } = useCart();
+const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(true);

@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://dreaminfinitydiagnosticsolution.com/sitemap.xml",
+    sitemap: "https://sebaloybd.com/sitemap.xml",
   };
 }

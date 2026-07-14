@@ -14,46 +14,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dreaminfinitydiagnosticsolution.com"),
+  metadataBase: new URL("https://sebaloybd.com"),
 
   title: {
-    default: "Dream Infinity Diagnostic Solution | IVD Products & Laboratory Equipment Bangladesh",
-    template: "%s | Dream Infinity Diagnostic Solution",
+    default: "Sebaloy | Trusted Online Healthcare Marketplace Bangladesh",
+    template: "%s | Sebaloy",
   },
 
   description:
-    "Dream Infinity Diagnostic Solution is a trusted supplier of IVD diagnostic products, laboratory equipment, reagents, consumables, and healthcare solutions in Bangladesh.",
+    "Sebaloy is a trusted online healthcare marketplace in Bangladesh. Buy medicines, healthcare products, baby & mom care items, medical devices and more.",
 
   keywords: [
-    "Dream Infinity Diagnostic Solution",
-    "IVD Bangladesh",
-    "Diagnostic Equipment Bangladesh",
-    "Laboratory Equipment",
-    "Medical Devices",
-    "Clinical Chemistry Analyzer",
-    "Immunoassay Analyzer",
-    "Hematology Analyzer",
-    "Laboratory Reagents",
-    "Healthcare Bangladesh",
+    "Sebaloy",
+    "Online Pharmacy Bangladesh",
+    "Healthcare Marketplace",
+    "Medicine",
+    "Medical Device",
+    "Baby Care",
+    "Healthcare Products",
+    "Medical Equipment",
+    "Bangladesh",
   ],
 
-  authors: [{ name: "Dream Infinity Diagnostic Solution" }],
-
-  creator: "Dream Infinity Diagnostic Solution",
-
-  publisher: "Dream Infinity Diagnostic Solution",
+  authors: [{ name: "Sebaloy" }],
+  creator: "Sebaloy",
+  publisher: "Sebaloy",
 
   alternates: {
-    canonical: "https://dreaminfinitydiagnosticsolution.com",
+    canonical: "https://sebaloybd.com",
   },
 
   openGraph: {
-    title:
-      "Dream Infinity Diagnostic Solution | IVD Products & Laboratory Equipment",
+    title: "Sebaloy | Trusted Online Healthcare Marketplace",
     description:
-      "Trusted supplier of IVD products, laboratory equipment, reagents, and healthcare solutions in Bangladesh.",
-    url: "https://dreaminfinitydiagnosticsolution.com",
-    siteName: "Dream Infinity Diagnostic Solution",
+      "Buy medicines, healthcare products, baby care and medical devices from Sebaloy.",
+    url: "https://sebaloybd.com",
+    siteName: "Sebaloy",
     locale: "en_US",
     type: "website",
   },
@@ -70,21 +66,3 @@ export const metadata: Metadata = {
     },
   },
 };
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {  return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-<body className="min-h-full flex flex-col">
-  <CartProvider>
-    <Navbar />
-    {children}
-  </CartProvider>
-</body> 
-  </html>
-  );
-}

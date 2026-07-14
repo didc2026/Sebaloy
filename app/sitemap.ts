@@ -3,9 +3,9 @@ import { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: "https://dreaminfinitydiagnosticsolution.com",
+      url: "https://sebaloybd.com",
       lastModified: new Date(),
-      changeFrequency: "weekly",
+      changeFrequency: "daily",
       priority: 1,
     },
   ];
