@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -7,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged
 } from "firebase/auth";
+import KpiPill from "../../components/KpiPill";
 import {
   addDoc,
   collection,
@@ -62,7 +62,12 @@ const [specifications, setSpecifications] = useState("");
   useState<File | null>(null);
 
   const [products, setProducts] = useState<any[]>([]);
+  const [productFilter, setProductFilter] = useState<"all" | "low" | "out">("all");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [showAddProduct, setShowAddProduct] = useState(true);
+const [showOrders, setShowOrders] = useState(false);
+const orderSectionRef = useRef<HTMLDivElement>(null);
+const [showProducts, setShowProducts] = useState(false);
   const handleCsvImport = async () => {
   if (!csvFile) {
     alert("Please select a CSV file");
@@ -189,13 +194,13 @@ const filteredOrders =
     : orders.filter(
         (order: any) => order.status === selectedStatus
       );
-      const filteredProducts =
-  selectedStatus === "lowstock"
+const filteredProducts =
+  productFilter === "low"
     ? lowStockProducts
-    : selectedStatus === "outofstock"
+    : productFilter === "out"
     ? outOfStockProducts
     : products;
-  const logout = async () => {
+      const logout = async () => {
     await signOut(auth);
     router.push("/admin/login");
   };
@@ -230,6 +235,7 @@ data.sort(
   (a: any, b: any) =>
     b.createdAt?.seconds - a.createdAt?.seconds
 );
+console.log(data);
     setOrders(data);
   } catch (error) {
     console.error(error);
@@ -463,86 +469,171 @@ const deleteProduct = async (
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          Sebaloy Admin Dashboard
-        </h1>
-<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-6 mb-8">
-  <div
-    onClick={() => setSelectedStatus("pending")}
-className="bg-yellow-500 text-white p-6 rounded-2xl cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 min-h-[120px] flex flex-col justify-center"  >
-    <h3 className="font-bold">Pending</h3>
-    <p className="text-3xl font-bold">{pendingOrders}</p>
-  </div>
+      <div className="mb-8 rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-  <div
-    onClick={() => setSelectedStatus("processing")}
-    className="bg-blue-500 text-white p-6 rounded-2xl cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 min-h-[120px] flex flex-col justify-center"
-  >
-    <h3 className="font-bold">Processing</h3>
-    <p className="text-3xl font-bold">{processingOrders}</p>
-  </div>
+    <div>
+      <h1 className="text-3xl font-bold text-slate-800">
+        🛡️ Sebaloy Admin Dashboard
+      </h1>
 
-  <div
-    onClick={() => setSelectedStatus("delivered")}
-    className="bg-green-500 text-white p-6 rounded-2xl cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 min-h-[120px] flex flex-col justify-center"
-  >
-    <h3 className="font-bold">Delivered</h3>
-    <p className="text-3xl font-bold">{deliveredOrders}</p>
-  </div>
-  <div
-  onClick={() => setSelectedStatus("shipped")}
-  className="bg-purple-500 text-white p-6 rounded-2xl cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+      <p className="mt-2 text-sm text-slate-500">
+        Manage Products, Orders & Inventory
+        </p>
+    </div>
+          <button
+  onClick={logout}
+  className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl font-medium transition"
 >
-  <h3 className="font-bold">Shipped</h3>
-  <p className="text-3xl font-bold">{shippedOrders}</p>
+  Logout
+</button>
+
+    </div>{/* ================= Order Workflow ================= */}
+
+<div className="mb-4">
+  <h2 className="text-lg font-bold text-slate-800 mb-2">
+    📦 Order Workflow
+  </h2>
+
+<div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+<KpiPill
+  title={`Pending (${pendingOrders})`}
+  value=""
+  icon="🟡"
+  onClick={() => {
+    setSelectedStatus("pending");
+    setShowOrders(true);
+    orderSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+        block: "start",
+    });
+  }}
+/>
+<div className="hidden lg:flex items-center text-slate-300 text-2xl px-2">
+  →
 </div>
+    <KpiPill
+      title={`Processing (${processingOrders})`}
+      value=""
+      icon="🔵"
+      onClick={() => {
+        setSelectedStatus("processing");
+        setShowOrders(true);
+        orderSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }}
+    />
 
-  <div className="bg-purple-500 text-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
-    <h3 className="font-bold">Sales</h3>
-    <p className="text-3xl font-bold">৳{totalSales}</p>
+    <span className="text-slate-400 font-bold text-lg">→</span>
+
+    <KpiPill
+      title={`Shipped (${shippedOrders})`}
+      value=""
+      icon="🟣"
+      onClick={() => {
+        setSelectedStatus("shipped");
+        setShowOrders(true);
+        orderSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }}
+    />
+
+    <span className="text-slate-400 font-bold text-lg">→</span>
+
+    <KpiPill
+      title={`Delivered (${deliveredOrders})`}
+      value=""
+      icon="🟢"
+      onClick={() => {
+        setSelectedStatus("delivered");
+        setShowOrders(true);
+        orderSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+            block: "start",
+        });
+      }}
+    />
+
   </div>
+{/* ================= Business ================= */}
 
-  <div className="bg-indigo-500 text-white p-4 rounded-xl">
-    <h3 className="font-bold">Total Orders</h3>
-    <p className="text-3xl font-bold">{totalOrders}</p>
+<div className="mb-4">
+  <h2 className="text-lg font-bold text-slate-800 mb-2">
+    📊 Business
+  </h2>
+
+<div className="flex items-center gap-4 overflow-x-auto py-2">
+<KpiPill
+  title={`Sales (৳${totalSales.toLocaleString()})`}
+  value=""
+  icon="💰"
+  onClick={() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }}
+/>
+<span className="text-slate-400 text-xl">→</span>
+<KpiPill
+  title={`Orders (${orders.length})`}
+  value=""
+  icon="📦"
+  onClick={() => {
+    setSelectedStatus("");
+    setShowOrders(true);
+
+    orderSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }}
+/>
   </div>
+</div>
+{/* ================= Inventory ================= */}
 
-  <div className="bg-orange-500 text-white p-4 rounded-xl">
-    <h3 className="font-bold">Total Products</h3>
-    <p className="text-3xl font-bold">{totalProducts}</p>
+<div className="mb-4">
+  <h2 className="text-lg font-bold text-slate-800 mb-2">
+    📦 Inventory
+  </h2>
+
+<div className="flex items-center gap-4 overflow-x-auto py-2">
+<KpiPill
+  title={`Low Stock (${lowStockProducts.length})`}
+  value=""
+  icon="🟠"
+  onClick={() => {
+    setProductFilter("low");
+    setShowProducts(true);
+
+    productSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }}
+/>
+<KpiPill
+  title={`Out of Stock (${outOfStockProducts.length})`}
+  value=""
+  icon="🔴"
+  onClick={() => {
+    setProductFilter("out");
+    setShowProducts(true);
+
+    productSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }}
+/>
   </div>
-
-  <div
-onClick={() => {
-  setSelectedStatus("lowstock");
-  productSectionRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}}    className="bg-amber-600 text-white p-4 rounded-xl cursor-pointer"
-  >
-    <h3 className="font-bold">Low Stock Products</h3>
-    <p className="text-3xl font-bold">{lowStockProducts.length}</p>
-  </div>
-
-  <div
-onClick={() => {
-  setSelectedStatus("outofstock");
-  productSectionRef.current?.scrollIntoView({
-    behavior: "smooth",
-  });
-}}    className="bg-red-600 text-white p-4 rounded-xl cursor-pointer"
-  >
-    <h3 className="font-bold">Out of Stock</h3>
-    <p className="text-3xl font-bold">{outOfStockProducts.length}</p>
-  </div>
-
-</div>   <button
-          onClick={logout}
-          className="bg-red-500 text-white px-4 py-2 rounded"
-        >
-          Logout
-        </button>
+</div>
+</div>   
       </div>
 {/* CSV Import */}
 
@@ -562,11 +653,151 @@ onClick={() => {
 >
   Import CSV
 </button>
+<div
+onClick={() => setShowOrders(!showOrders)}
+  className="bg-teal-600 text-white rounded-lg px-5 py-4 mb-3 flex justify-between items-center cursor-pointer"
+>
+  <h2 className="text-xl font-bold">
+        📦 Orders
+  </h2>
 
-<form
-  onSubmit={saveProduct}
-  className="bg-white p-6 rounded-lg shadow mb-8 space-y-4"
-></form>
+  <span className="text-2xl font-bold">
+    {showOrders ? "−" : "+"}
+  </span>
+</div>
+
+{showOrders && (
+<>
+<input
+  type="text"
+  placeholder="Search by name or phone..."
+  value={searchOrder}
+  onChange={(e) => setSearchOrder(e.target.value)}
+  className="w-full border p-3 rounded-lg mb-4"
+/>
+<div className="space-y-4 mb-8">
+{filteredOrders
+  .filter(
+    (order) =>
+      order.customerName
+        ?.toLowerCase()
+        .includes(searchOrder.toLowerCase()) ||
+      order.phone?.includes(searchOrder)
+  )
+.map((order: any) => (
+  <div
+    key={order.id}
+    className="bg-white border rounded-lg p-4"
+  >    
+      <p>
+        <strong>Order ID:</strong> {order.id}
+      </p>
+
+      <p>
+        <strong>Name:</strong> {order.customerName}
+      </p>
+
+      <p>
+        <strong>Phone:</strong> {order.phone}
+      </p>
+
+      <p>
+        <strong>Address:</strong> {order.address}
+      </p>
+
+      <p>
+        <strong>Total:</strong> ৳{order.total}
+      </p>
+
+<div className="mt-2">
+  <strong>Status:</strong>{" "}
+
+  <span
+    className={`px-3 py-1 rounded-full text-white text-sm font-semibold
+      ${
+order.status === "pending"
+  ? "bg-yellow-500"
+  : order.status === "processing"
+  ? "bg-blue-500"
+  : order.status === "shipped"
+  ? "bg-purple-500"
+  : "bg-green-600"      }`}
+  >
+    {order.status}
+  </span>
+</div>
+      <p>
+        <strong>Date:</strong>{" "}
+        {order.createdAt?.toDate
+          ? order.createdAt
+              .toDate()
+              .toLocaleString()
+          : "N/A"}
+      </p>
+<div className="mt-3">
+  <strong>Products:</strong>
+
+  <ul className="list-disc ml-5 mt-2">
+    {order.items?.map(
+      (item: any, index: number) => (
+        <li key={index}>
+          {item.name} × {item.quantity}
+        </li>
+      )
+    )}
+  </ul>
+</div>
+      <select
+        value={order.status}
+        onChange={(e) =>
+          updateOrderStatus(
+            order.id,
+            e.target.value
+          )
+        }
+        className="border p-2 rounded mt-3 mr-3"
+      >
+        <option value="pending">
+          Pending
+        </option>
+
+        <option value="processing">
+          Processing
+        </option>
+        <option value="shipped">Shipped</option>
+
+
+        <option value="delivered">
+          Delivered
+        </option>
+      </select>
+
+      <button
+        onClick={() => deleteOrder(order.id)}
+        className="bg-red-500 text-white px-3 py-2 rounded"
+      >
+        Delete Order
+      </button>
+    </div>
+  ))}
+</div>
+</>
+)}
+<div
+  onClick={() => setShowProducts(!showProducts)}
+  className="bg-teal-600 text-white rounded-lg px-5 py-4 mb-3 flex justify-between items-center cursor-pointer"
+>
+  <h2 className="text-xl font-bold">
+
+    📦 Add Product
+  </h2>
+
+  <span className="text-2xl font-bold">
+    {showAddProduct ? "−" : "+"}
+  </span>
+</div>
+
+{showAddProduct && (
       <form
         onSubmit={saveProduct}
         className="bg-white p-6 rounded-lg shadow mb-8 space-y-4"
@@ -886,125 +1117,24 @@ setPrice(e.target.value)
             : "Add Product"}
         </button>
       </form>
-<h2 className="text-2xl font-bold mb-4 mt-8">
-  Orders
-</h2>
-<input
-  type="text"
-  placeholder="Search by name or phone..."
-  value={searchOrder}
-  onChange={(e) => setSearchOrder(e.target.value)}
-  className="w-full border p-3 rounded-lg mb-4"
-/>
-<div className="space-y-4 mb-8">
-{filteredOrders
-  .filter(
-    (order) =>
-      order.customerName
-        ?.toLowerCase()
-        .includes(searchOrder.toLowerCase()) ||
-      order.phone?.includes(searchOrder)
-  )
-.map((order: any) => (
-  <div
-    key={order.id}
-    className="bg-white border rounded-lg p-4"
-  >    
-      <p>
-        <strong>Order ID:</strong> {order.id}
-      </p>
+)}
+<div ref={orderSectionRef}onClick={() => {
+  setSelectedStatus("");
+setShowOrders(true);
+}}  
+className="bg-blue-600 text-white rounded-lg px-5 py-4 mb-3 mt-8 flex justify-between items-center cursor-pointer"
+>
+  <h2 className="text-xl font-bold">
+    📦 Product List
+  </h2>
 
-      <p>
-        <strong>Name:</strong> {order.customerName}
-      </p>
-
-      <p>
-        <strong>Phone:</strong> {order.phone}
-      </p>
-
-      <p>
-        <strong>Address:</strong> {order.address}
-      </p>
-
-      <p>
-        <strong>Total:</strong> ৳{order.total}
-      </p>
-
-<div className="mt-2">
-  <strong>Status:</strong>{" "}
-
-  <span
-    className={`px-3 py-1 rounded-full text-white text-sm font-semibold
-      ${
-order.status === "pending"
-  ? "bg-yellow-500"
-  : order.status === "processing"
-  ? "bg-blue-500"
-  : order.status === "shipped"
-  ? "bg-purple-500"
-  : "bg-green-600"      }`}
-  >
-    {order.status}
+  <span className="text-2xl font-bold">
+    {showProducts ? "−" : "+"}
   </span>
 </div>
-      <p>
-        <strong>Date:</strong>{" "}
-        {order.createdAt?.toDate
-          ? order.createdAt
-              .toDate()
-              .toLocaleString()
-          : "N/A"}
-      </p>
-<div className="mt-3">
-  <strong>Products:</strong>
 
-  <ul className="list-disc ml-5 mt-2">
-    {order.items?.map(
-      (item: any, index: number) => (
-        <li key={index}>
-          {item.name} × {item.quantity}
-        </li>
-      )
-    )}
-  </ul>
-</div>
-      <select
-        value={order.status}
-        onChange={(e) =>
-          updateOrderStatus(
-            order.id,
-            e.target.value
-          )
-        }
-        className="border p-2 rounded mt-3 mr-3"
-      >
-        <option value="pending">
-          Pending
-        </option>
-
-        <option value="processing">
-          Processing
-        </option>
-        <option value="shipped">Shipped</option>
-
-
-        <option value="delivered">
-          Delivered
-        </option>
-      </select>
-
-      <button
-        onClick={() => deleteOrder(order.id)}
-        className="bg-red-500 text-white px-3 py-2 rounded"
-      >
-        Delete Order
-      </button>
-    </div>
-  ))}
-</div>
-      <h2 className="text-2xl font-bold mb-4">
-        Product List
-      </h2>
+{showProducts && (
+<>
       {lowStockProducts.length > 0 && (
         <div className="bg-red-100 border border-red-300 p-4 rounded-xl mb-4">
           <h3 className="font-bold text-red-700 mb-2">
@@ -1149,6 +1279,10 @@ order.status === "pending"
     </div>
   ))}
 </div>
+
+</>
+
+)}
 
 </div>
   );
