@@ -138,9 +138,11 @@ type Props = {
   sampleType: string;
   setSampleType: (value: string) => void;
 
+  preparation: string;
+  setPreparation: (value: string) => void;
+
   specimen: string;
   setSpecimen: (value: string) => void;
-
   sampleVolume: string;
   setSampleVolume: (value: string) => void;
 
@@ -233,6 +235,7 @@ type Props = {
 
   sampleRequirements: string;
   setSampleRequirements: (value: string) => void;
+
   activeIngredient: string;
   setActiveIngredient: (value: string) => void;
 
@@ -422,6 +425,9 @@ export default function AddProductForm({
   sampleType,
   setSampleType,
 
+  preparation,
+  setPreparation,
+
   specimen,
   setSpecimen,
 
@@ -592,7 +598,7 @@ export default function AddProductForm({
   const isLabTest =
     normalizedCategory === "lab-test" ||
     normalizedCategory === "lab-tests";
-    console.log("ADD PRODUCT FORM COMPONENT IS RENDERING");
+  console.log("ADD PRODUCT FORM COMPONENT IS RENDERING");
   return (
 
     <form
@@ -1040,6 +1046,9 @@ export default function AddProductForm({
 
           sampleType={sampleType}
           setSampleType={setSampleType}
+
+          preparation={preparation}
+          setPreparation={setPreparation}
 
           specimen={specimen}
           setSpecimen={setSpecimen}

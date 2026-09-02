@@ -1384,8 +1384,8 @@ export default function Dashboard() {
                             </p>
                             <p className="text-xs text-slate-400">
                               Sebaloy ID: {booking.sebaloyBookingId || "N/A"}
-                            </p>                         
-                             </td>
+                            </p>
+                          </td>
 
                           {/* Mobile */}
                           <td className="px-4 py-3">
@@ -1739,6 +1739,9 @@ export default function Dashboard() {
 
                     specimen={specimen}
                     setSpecimen={setSpecimen}
+
+                    preparation={preparation}
+                    setPreparation={setPreparation}
 
                     sampleVolume={sampleVolume}
                     setSampleVolume={setSampleVolume}
