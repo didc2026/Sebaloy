@@ -16,23 +16,7 @@ export default function KpiPill({
   return (
     <button
       onClick={onClick}
-      className="
-        w-full
-        flex
-        items-center
-        justify-between
-        px-4
-        py-2
-        rounded-full
-        bg-white
-        border
-        border-gray-200
-        shadow-sm
-        hover:shadow-md
-        hover:border-blue-400
-        transition-all
-        duration-200
-      "
+      className="w-full flex items-center justify-between px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all duration-200"
     >
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-lg">

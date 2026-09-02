@@ -1,16 +1,33 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import Link from "next/link";
+import ProductList from "../../components/admin/ProductList";
+import OrdersSection from "../../components/admin/OrdersSection";
 import {
   signOut,
   onAuthStateChanged
 } from "firebase/auth";
 import KpiPill from "../../components/KpiPill";
+import StatCard from "../../components/admin/StatCard";
+import DashboardHeader from "../../components/admin/DashboardHeader";
+import InventoryStats from "../../components/admin/InventoryStats";
+import OrderWorkflow from "../../components/admin/OrderWorkflow";
+import MedicineFields from "@/app/components/admin/CategoryFields/MedicineFields";
+import BabyMomFields from "../../components/admin/CategoryFields/BabyMomFields";
+import HealthcareFields from "../../components/admin/CategoryFields/HealthcareFields";
+import PersonalCareFields from "@/app/components/admin/CategoryFields/PersonalCareFields";
+import MedicalDeviceFields from "../../components/admin/CategoryFields/MedicalDeviceFields";
+import LabTestFields from "@/app/components/admin/CategoryFields/LabTestFields";
+import AnimalFeedAdditives from "../../components/admin/CategoryFields/AnimalFeedAdditives";
+import BusinessStats from "../../components/admin/BusinessStats";
+import RecentOrders from "../../components/admin/RecentOrdersTemp";
 import {
   addDoc,
   collection,
   deleteDoc,
+  orderBy,
+  query,
   doc,
   getDocs,
   updateDoc,
@@ -30,177 +47,359 @@ export default function Dashboard() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [testType, setTestType] = useState("");
+  const [sampleType, setSampleType] = useState("");
+  const [preparation, setPreparation] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [itemType, setItemType] = useState<"product" | "lab_test">("product");
   const [company, setCompany] = useState("");
   const [genericName, setGenericName] = useState("");
   const [strength, setStrength] = useState("");
-const [stripsPerBox, setStripsPerBox] = useState("");
-const [tabletsPerStrip, setTabletsPerStrip] = useState("");
-const [unitType, setUnitType] = useState("Tablet");
+  const [size, setSize] = useState("");
+  const [stripsPerBox, setStripsPerBox] = useState("");
+  const [tabletsPerStrip, setTabletsPerStrip] = useState("");
+  const [unitType, setUnitType] = useState("Tablet");
   const [discount, setDiscount] = useState("0");
+  const [featured, setFeatured] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-const [size, setSize] = useState("");
-const [brand, setBrand] = useState("");
-const [model, setModel] = useState("");
-const [warranty, setWarranty] = useState("");
-const [pharmacology, setPharmacology] = useState("");
-const [indication, setIndication] = useState("");
-const [dosage, setDosage] = useState("");
-const [administration, setAdministration] = useState("");
-const [sideEffects, setSideEffects] = useState("");
-const [precautions, setPrecautions] = useState("");
-const [pregnancyLactation, setPregnancyLactation] = useState("");
-const [drugInteraction, setDrugInteraction] = useState("");
-const [storageInfo, setStorageInfo] = useState("");
-const [description, setDescription] = useState("");
-const [features, setFeatures] = useState("");
-const [specifications, setSpecifications] = useState("");
+  const [brand, setBrand] = useState("");
+  const [productType, setProductType] = useState("");
+  const [keyIngredients, setKeyIngredients] = useState("");
+  const [skinHairType, setSkinHairType] = useState("");
+  const [countryOfOrigin, setCountryOfOrigin] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [howToUse, setHowToUse] = useState("");
+  const [ingredients, setIngredients] = useState("");
+  const [shelfLife, setShelfLife] = useState("");
+  const [model, setModel] = useState("");
+  const [warranty, setWarranty] = useState("");
+  const [pharmacology, setPharmacology] = useState("");
+  const [indication, setIndication] = useState("");
+  const [dosage, setDosage] = useState("");
+  const [administration, setAdministration] = useState("");
+  const [sideEffects, setSideEffects] = useState("");
+  const [precautions, setPrecautions] = useState("");
+  const [pregnancyLactation, setPregnancyLactation] = useState("");
+  const [drugInteraction, setDrugInteraction] = useState("");
+  const [storageInfo, setStorageInfo] = useState("");
+  const [description, setDescription] = useState("");
+  const [features, setFeatures] = useState("");
+  const [specifications, setSpecifications] = useState("");
+
+  // =========================
+  // MEDICAL DEVICE / IVD FIELDS
+  // =========================
+
+  const [kitType, setKitType] = useState("");
+  const [numberOfTests, setNumberOfTests] = useState("");
+  const [reagentComponents, setReagentComponents] = useState("");
+  const [calibratorControl, setCalibratorControl] = useState("");
+
+  const [analyticalSensitivity, setAnalyticalSensitivity] = useState("");
+  const [analyticalSpecificity, setAnalyticalSpecificity] = useState("");
+  const [detectionRange, setDetectionRange] = useState("");
+
+  const [ceIvdrStatus, setCeIvdrStatus] = useState("");
+  const [ivdClassification, setIvdClassification] = useState("");
+  const [instrumentCompatibility, setInstrumentCompatibility] = useState("");
+  const [testCategory, setTestCategory] = useState("");
+  const [testName, setTestName] = useState("");
+  const [shortName, setShortName] = useState("");
+  const [testCode, setTestCode] = useState("");
+  const [clinicalSpecialty, setClinicalSpecialty] = useState("");
+  const [targetDiseaseCondition, setTargetDiseaseCondition] = useState("");
+
+  const [specimen, setSpecimen] = useState("");
+  const [sampleVolume, setSampleVolume] = useState("");
+  const [sampleCollectionInstructions, setSampleCollectionInstructions] = useState("");
+  const [sampleStabilityHandling, setSampleStabilityHandling] = useState("");
+  const [fastingRequirement, setFastingRequirement] = useState("");
+
+  const [testMethod, setTestMethod] = useState("");
+  const [testPrinciple, setTestPrinciple] = useState("");
+  const [testingPlatformAnalyzer, setTestingPlatformAnalyzer] = useState("");
+  const [referenceRangeCutoff, setReferenceRangeCutoff] = useState("");
+  const [unit, setUnit] = useState("");
+  const [resultType, setResultType] = useState("");
+
+  const [turnaroundTime, setTurnaroundTime] = useState("");
+  const [homeSampleCollection, setHomeSampleCollection] = useState("");
+  const [sampleCollectionSchedule, setSampleCollectionSchedule] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const [reportDelivery, setReportDelivery] = useState("");
+  const [partnerLaboratory, setPartnerLaboratory] = useState("");
+  const [branchLocation, setBranchLocation] = useState("");
+  const [partnerLabTestCode, setPartnerLabTestCode] = useState("");
+
+  const [partnerLabPrice, setPartnerLabPrice] = useState("");
+  const [sebaloySellingPrice, setSebaloySellingPrice] = useState("");
+  const [homeCollectionCharge, setHomeCollectionCharge] = useState("");
+  const [discountPromotionalPrice, setDiscountPromotionalPrice] = useState("");
+
+  const [whyThisTest, setWhyThisTest] = useState("");
+  const [whenRecommended, setWhenRecommended] = useState("");
+  const [clinicalSignificance, setClinicalSignificance] = useState("");
+  const [sampleRequirements, setSampleRequirements] = useState("");
+  const [activeIngredient, setActiveIngredient] = useState("");
+  const [activeContent, setActiveContent] = useState("");
+  const [casNumber, setCasNumber] = useState("");
+  const [chemicalFormula, setChemicalFormula] = useState("");
+  const [targetAnimal, setTargetAnimal] = useState("");
+  const [applicationPurpose, setApplicationPurpose] = useState("");
+  const [inclusionRate, setInclusionRate] = useState("");
+  const [physicalForm, setPhysicalForm] = useState("");
+  const [storageConditions, setStorageConditions] = useState("");
   const [imageFile, setImageFile] =
     useState<File | null>(null);
-    const [csvFile, setCsvFile] =
-  useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+
+
+  const [csvFile, setCsvFile] =
+    useState<File | null>(null); const [categories, setCategories] = useState<any[]>([]);
+  const selectedCategory = categories.find(
+    (cat: any) => cat.name === category
+  );
+  const isLabTestCategory =
+    selectedCategory?.name?.toLowerCase().includes("lab test") ||
+    selectedCategory?.slug?.toLowerCase().includes("lab-test") ||
+    selectedCategory?.id === "lab-test";
   const [products, setProducts] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "categories"));
+
+        const categoryData = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((category: any) => category.status !== false)
+          .sort(
+            (a: any, b: any) =>
+              Number(a.sortOrder ?? 999) - Number(b.sortOrder ?? 999)
+          );
+
+        setCategories(categoryData);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   const [productFilter, setProductFilter] = useState<"all" | "low" | "out">("all");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(true);
-const [showOrders, setShowOrders] = useState(false);
-const orderSectionRef = useRef<HTMLDivElement>(null);
-const [showProducts, setShowProducts] = useState(false);
+  const [showOrders, setShowOrders] = useState(false);
+  const [showDiagnosticBookings, setShowDiagnosticBookings] =
+    useState(false);
+  const orderSectionRef = useRef<HTMLDivElement>(null);
+  const [showProducts, setShowProducts] = useState(false);
+  const [searchProduct, setSearchProduct] = useState("");
+  const filteredProducts = products.filter((product: any) => {
+    const matchSearch =
+      product.name?.toLowerCase().includes(searchProduct.toLowerCase()) ||
+      product.company?.toLowerCase().includes(searchProduct.toLowerCase()) ||
+      product.genericName?.toLowerCase().includes(searchProduct.toLowerCase());
+
+    const matchFilter =
+      productFilter === "all"
+        ? true
+        : productFilter === "low"
+          ? Number(product.stock) > 0 && Number(product.stock) <= 10
+          : Number(product.stock) === 0;
+
+    return matchSearch && matchFilter;
+  });
+  console.log("Products:", products);
+  console.log("Filtered:", filteredProducts);
   const handleCsvImport = async () => {
-  if (!csvFile) {
-    alert("Please select a CSV file");
-    return;
-  }
+    if (!csvFile) {
+      alert("Please select a CSV file");
+      return;
+    }
 
-  const text = await csvFile.text();
-  const rows = text.split("\n").slice(1);
+    const text = await csvFile.text();
+    const rows = text.split("\n").slice(1);
 
-  for (const row of rows) {
-    if (!row.trim()) continue;
+    for (const row of rows) {
+      if (!row.trim()) continue;
 
-const [
-  name,
-  genericName,
-  strength,
-  company,
-  category,
-  stripsPerBox,
-  tabletsPerStrip,
-  unitType,
-  discount,
-  imageUrl,
-  price,
-  stock,
-] = row.split(",");
-await addDoc(collection(db, "products"), {
-  name: name?.trim(),
-  genericName: genericName?.trim(),
-  strength: strength?.trim(),
-  company: company?.trim(),
-  category: category?.trim(),
-  description: description?.trim(),
-features: features?.trim(),
-specifications: specifications?.trim(),
+      const [
+        name,
+        genericName,
+        strength,
+        company,
+        category,
+        stripsPerBox,
+        tabletsPerStrip,
+        unitType,
+        discount,
+        imageUrl,
+        price,
+        stock,
+      ] = row.split(",");
+      await addDoc(collection(db, "products"), {
+        name: name?.trim(),
+        genericName: genericName?.trim(),
+        strength: strength?.trim(),
+        company: company?.trim(),
+        category: category?.trim(),
+        description: description?.trim(),
+        features: features?.trim(),
+        specifications: specifications?.trim(),
 
-pharmacology: pharmacology?.trim(),
-indication: indication?.trim(),
-dosage: dosage?.trim(),
-administration: administration?.trim(),
-sideEffects: sideEffects?.trim(),
-precautions: precautions?.trim(),
-pregnancyLactation: pregnancyLactation?.trim(),
-drugInteraction: drugInteraction?.trim(),
-storageInfo: storageInfo?.trim(),
+        pharmacology: pharmacology?.trim(),
+        indication: indication?.trim(),
+        dosage: dosage?.trim(),
+        administration: administration?.trim(),
+        sideEffects: sideEffects?.trim(),
+        precautions: precautions?.trim(),
+        pregnancyLactation: pregnancyLactation?.trim(),
+        drugInteraction: drugInteraction?.trim(),
+        storageInfo: storageInfo?.trim(),
 
-  stripsPerBox: stripsPerBox?.trim(),
-  tabletsPerStrip: tabletsPerStrip?.trim(),
-  unitType: unitType?.trim(),
+        stripsPerBox: stripsPerBox?.trim(),
+        tabletsPerStrip: tabletsPerStrip?.trim(),
+        unitType: unitType?.trim(),
 
-  discount: Number(discount || 0),
-  imageUrl: imageUrl?.trim(),
+        discount: Number(discount || 0),
+        imageUrl: imageUrl?.trim(),
 
-  price: Number(price),
-  stock: Number(stock),
+        featured: false,
 
-  createdAt: new Date(),
-});}
+        price: Number(price),
+        stock: Number(stock),
 
-alert("CSV Import Completed");
-};const toggleProductSelection = (id: string) => {
-  setSelectedProducts((prev) =>
-    prev.includes(id)
-      ? prev.filter((item) => item !== id)
-      : [...prev, id]
-  );
-};
-const deleteSelectedProducts = async () => {
-  if (selectedProducts.length === 0) return;
+        createdAt: new Date(),
+      });
+    }
 
-  const confirmed = confirm(
-    `Delete ${selectedProducts.length} products?`
-  );
+    alert("CSV Import Completed");
+  }; const toggleProductSelection = (id: string) => {
+    setSelectedProducts((prev) =>
+      prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id]
+    );
+  };
+  const deleteSelectedProducts = async () => {
+    if (selectedProducts.length === 0) return;
 
-  if (!confirmed) return;
+    const confirmed = confirm(
+      `Delete ${selectedProducts.length} products?`
+    );
 
-  for (const id of selectedProducts) {
-    await deleteDoc(doc(db, "products", id));
-  }
+    if (!confirmed) return;
 
-  setProducts((prev) =>
-    prev.filter(
-      (product) => !selectedProducts.includes(product.id)
-    )
-  );
+    for (const id of selectedProducts) {
+      await deleteDoc(doc(db, "products", id));
+    }
 
-  setSelectedProducts([]);
-};
+    setProducts((prev) =>
+      prev.filter(
+        (product) => !selectedProducts.includes(product.id)
+      )
+    );
+
+    setSelectedProducts([]);
+  };
   const [editingId, setEditingId] = useState("");
   const [orders, setOrders] = useState<any[]>([]);
+  const [testBookings, setTestBookings] = useState<any[]>([]);
   const [searchOrder, setSearchOrder] = useState("");
-const pendingOrders = orders.filter(
-  (o) => o.status === "pending"
-).length;
+  const pendingOrders = orders.filter(
+    (o) => o.status === "pending"
+  ).length;
 
-const processingOrders = orders.filter(
-  (o) => o.status === "processing"
-).length;
-const shippedOrders = orders.filter(
-  (o) => o.status === "shipped"
-).length;
+  const processingOrders = orders.filter(
+    (o) => o.status === "processing"
+  ).length;
+  const shippedOrders = orders.filter(
+    (o) => o.status === "shipped"
+  ).length;
 
-const deliveredOrders = orders.filter(
-  (o) => o.status === "delivered"
-).length;
+  const deliveredOrders = orders.filter(
+    (o) => o.status === "delivered"
+  ).length;
 
-const totalSales = orders
-  .filter((o) => o.status === "delivered")
-  .reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalSales = orders
+
+    .filter((o) => o.status === "delivered")
+    .reduce((sum, o) => sum + (o.total || 0), 0);
+  const today = new Date();
+
+  const todaySales = orders
+    .filter((o) => {
+      if (o.status !== "delivered" || !o.createdAt) return false;
+
+      const d = o.createdAt.toDate();
+
+      return (
+        d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
+    })
+    .reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const monthSales = orders
+    .filter((o) => {
+      if (o.status !== "delivered" || !o.createdAt) return false;
+
+      const d = o.createdAt.toDate();
+
+      return (
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
+    })
+    .reduce((sum, o) => sum + (o.total || 0), 0);
   const totalOrders = orders.length;
-const totalProducts = products.length;
-const lowStockProducts = products.filter(
-  (product: any) =>
-    Number(product.stock) > 0 &&
-    Number(product.stock) <= 10
-);const outOfStockProducts = products.filter(
-  (product: any) => Number(product.stock) === 0
-);
-const [selectedStatus, setSelectedStatus] = useState("all");
-const productSectionRef = useRef<HTMLDivElement>(null);
-const filteredOrders =
-  selectedStatus === "all"
-    ? orders
-    : orders.filter(
+  const totalTestBookings = testBookings.length;
+
+  const pendingTestBookings = testBookings.filter(
+    (booking: any) => booking.status === "pending"
+  ).length;
+
+  const confirmedTestBookings = testBookings.filter(
+    (booking: any) => booking.status === "confirmed"
+  ).length;
+
+  const completedTestBookings = testBookings.filter(
+    (booking: any) => booking.status === "completed"
+  ).length;
+  const lowStockProducts = products.filter(
+    (product: any) =>
+      Number(product.stock) > 0 &&
+      Number(product.stock) <= 10
+  ); const outOfStockProducts = products.filter(
+    (product: any) => Number(product.stock) === 0
+  );
+  const totalProducts = products.length;
+
+  const activeProducts = products.filter(
+    (product: any) => Number(product.stock) > 0
+  ).length;
+  const recentOrders = [...orders]
+    .sort(
+      (a: any, b: any) =>
+        b.createdAt?.seconds - a.createdAt?.seconds
+    )
+    .slice(0, 5);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const productSectionRef = useRef<HTMLDivElement>(null);
+  const filteredOrders =
+    selectedStatus === "all"
+      ? orders
+      : orders.filter(
         (order: any) => order.status === selectedStatus
       );
-const filteredProducts =
-  productFilter === "low"
-    ? lowStockProducts
-    : productFilter === "out"
-    ? outOfStockProducts
-    : products;
-      const logout = async () => {
+  const logout = async () => {
     await signOut(auth);
     router.push("/admin/login");
   };
@@ -221,111 +420,369 @@ const filteredProducts =
       console.error(error);
     }
   };
-const fetchOrders = async () => {
-  try {
-    const snapshot = await getDocs(
-      collection(db, "orders")
+  const fetchOrders = async () => {
+    try {
+      const snapshot = await getDocs(
+        collection(db, "orders")
+      );
+
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      }));
+      data.sort(
+        (a: any, b: any) =>
+          b.createdAt?.seconds - a.createdAt?.seconds
+      );
+      console.log(data);
+      setOrders(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const fetchTestBookings = async () => {
+    try {
+      const snapshot = await getDocs(
+        collection(db, "testBookings")
+      );
+
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      }));
+
+      data.sort(
+        (a: any, b: any) =>
+          b.createdAt?.seconds - a.createdAt?.seconds
+      );
+
+      setTestBookings(data);
+    } catch (error) {
+      console.error("Failed to fetch test bookings:", error);
+    }
+  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        if (!user) {
+          router.push("/admin/login");
+          return;
+        }
+
+        fetchProducts();
+        fetchOrders();
+        fetchTestBookings();
+      }
     );
 
-    const data = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data(),
-    }));
-data.sort(
-  (a: any, b: any) =>
-    b.createdAt?.seconds - a.createdAt?.seconds
-);
-console.log(data);
-    setOrders(data);
-  } catch (error) {
-    console.error(error);
-  }
-};
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(
-    auth,
-    (user) => {
-      if (!user) {
-        router.push("/admin/login");
-        return;
-      }
-
-      fetchProducts();
-      fetchOrders();
-    }
-  );
-
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
   const resetForm = () => {
     setName("");
     setCategory("");
     setPrice("");
     setStock("");
+    setCompany("");
+    setProductType("");
+    setKeyIngredients("");
+    setSkinHairType("");
+    setCountryOfOrigin("");
+    setBenefits("");
+    setHowToUse("");
+    setIngredients("");
+    setShelfLife("");
+    setGenericName("");
+    setStrength("");
+    setSize("");
+    setBrand("");
+    setModel("");
+    setWarranty("");
+
+    // Clear packaging fields
+    setStripsPerBox("");
+    setTabletsPerStrip("");
+    // =========================
+    // Clear Lab Test fields
+    // =========================
+
+    setTestName("");
+    setShortName("");
+    setTestCategory("");
+    setTestCode("");
+    setClinicalSpecialty("");
+    setTargetDiseaseCondition("");
+
+    setSampleType("");
+    setSpecimen("");
+    setSampleVolume("");
+    setSampleCollectionInstructions("");
+    setSampleStabilityHandling("");
+    setFastingRequirement("");
+
+    setTestMethod("");
+    setTestPrinciple("");
+    setTestingPlatformAnalyzer("");
+    setReferenceRangeCutoff("");
+    setUnit("");
+    setResultType("");
+
+    setTurnaroundTime("");
+    setHomeSampleCollection("");
+    setSampleCollectionSchedule("");
+    setSpecialInstructions("");
+    setReportDelivery("");
+
+    setPartnerLaboratory("");
+    setBranchLocation("");
+    setPartnerLabTestCode("");
+
+    setPartnerLabPrice("");
+    setSebaloySellingPrice("");
+    setHomeCollectionCharge("");
+    setDiscountPromotionalPrice("");
+
+    setWhyThisTest("");
+    setWhenRecommended("");
+    setClinicalSignificance("");
+    setSampleRequirements("");
+    // =========================
+    // Clear Animal Feed fields
+    // =========================
+
+    setActiveIngredient("");
+    setActiveContent("");
+    setCasNumber("");
+    setChemicalFormula("");
+    setTargetAnimal("");
+    setApplicationPurpose("");
+    setInclusionRate("");
+    setPhysicalForm("");
+    setStorageConditions("");
+    setUnitType("Tablet");
+    setDiscount("0");
+
+    setFeatured(false);
     setImageUrl("");
     setImageFile(null);
+    setImageFiles([]);
+    setExistingImages([]);
     setEditingId("");
-  };
 
+    setPharmacology("");
+    setIndication("");
+    setDosage("");
+    setAdministration("");
+    setSideEffects("");
+    setPrecautions("");
+    setPregnancyLactation("");
+    setDrugInteraction("");
+    setStorageInfo("");
+
+    setDescription("");
+    setFeatures("");
+    setSpecifications("");
+  };
   const saveProduct = async (
     e: React.FormEvent
   ) => {
     e.preventDefault();
+    const isLabTest =
+      category?.toLowerCase().replace(/[^a-z]/g, "") === "labtests";
 
-try {
-  let currentImageUrl = imageUrl || "";
-if (imageFile) {
-  console.log("Selected file:", imageFile.name);
+    try {
+      // Prevent duplicate product/test creation
+      if (!editingId) {
+        const normalizedName = name.trim().toLowerCase();
+        const normalizedCategory = category.trim().toLowerCase();
 
-  const imageRef = ref(
-    storage,
-    `products/${Date.now()}-${imageFile.name}`
-  );
+        const existingProductsSnapshot = await getDocs(
+          collection(db, "products")
+        );
 
-  console.log("Uploading...");
+        const duplicateExists = existingProductsSnapshot.docs.some(
+          (item) => {
+            const data = item.data();
 
-  await uploadBytes(
-    imageRef,
-    imageFile
-  );
+            return (
+              data.name?.trim().toLowerCase() === normalizedName &&
+              data.category?.trim().toLowerCase() === normalizedCategory
+            );
+          }
+        );
 
-  console.log("Upload Success");
+        if (duplicateExists) {
+          alert(
+            `This ${category === "Lab-Tests" ? "test" : "product"
+            } already exists!`
+          );
+          return;
+        }
+      }
 
-currentImageUrl =
-    await getDownloadURL(imageRef);
+      let currentImageUrl = imageUrl || "";
 
-console.log("Image URL:", currentImageUrl);}
-      if (editingId) {
-const updateData: any = {
-  name,
-  genericName,
-  strength,
-  category,
-  price: Number(price),
-  stock: Number(stock),
-  company,
+      // Upload Main Product Image
 
-  stripsPerBox,
-  tabletsPerStrip,
-unitType,
-  discount: Number(discount) || 0,
-  description,
-features,
-specifications,
+      if (imageFile) {
+        console.log("Selected main image:", imageFile.name);
 
-pharmacology,
-indication,
-dosage,
-administration,
-sideEffects,
-precautions,
-pregnancyLactation,
-drugInteraction,
-storageInfo,
-};
-if (currentImageUrl) {
-  updateData.imageUrl = currentImageUrl;
-}
+        const imageRef = ref(
+          storage,
+          `products/${Date.now()}-${imageFile.name}`
+        );
+
+        console.log("Uploading main image...");
+
+        await uploadBytes(imageRef, imageFile);
+
+        currentImageUrl =
+          await getDownloadURL(imageRef);
+
+        console.log("Main Image URL:", currentImageUrl);
+      }
+
+      // Upload Additional Product Images
+      let additionalImageUrls: string[] = [];
+
+      if (imageFiles.length > 0) {
+        console.log(
+          "Uploading additional images:",
+          imageFiles.length
+        );
+
+        additionalImageUrls = await Promise.all(
+          imageFiles.map(async (file, index) => {
+            const imageRef = ref(
+              storage,
+              `products/${Date.now()}-${index}-${file.name}`
+            );
+
+            await uploadBytes(imageRef, file);
+
+            return await getDownloadURL(imageRef);
+          })
+        );
+
+        console.log(
+          "Additional Image URLs:",
+          additionalImageUrls
+        );
+      } if (editingId) {
+        const updateData: any = {
+          name,
+          genericName,
+          strength,
+          size,
+          brand,
+          productType,
+          keyIngredients,
+          skinHairType,
+          countryOfOrigin,
+          benefits,
+          howToUse,
+          ingredients,
+          shelfLife,
+          images: [
+            ...(currentImageUrl
+              ? [currentImageUrl]
+              : existingImages.slice(0, 1)),
+
+            ...existingImages.slice(1),
+
+            ...additionalImageUrls,
+          ].filter(Boolean),
+          category,
+          price: Number(price),
+          ...(isLabTest ? {} : { stock: Number(stock) }),
+          company,
+          stripsPerBox,
+          tabletsPerStrip,
+          unitType,
+          discount: Number(discount) || 0,
+          featured,
+          description,
+          features,
+          specifications,
+
+          pharmacology,
+          indication,
+          dosage,
+          administration,
+          sideEffects,
+          precautions,
+          pregnancyLactation,
+          drugInteraction,
+          storageInfo,
+          activeIngredient,
+          activeContent,
+          casNumber,
+          chemicalFormula,
+          targetAnimal,
+          applicationPurpose,
+          inclusionRate,
+          physicalForm,
+          storageConditions,
+          kitType,
+          numberOfTests,
+          reagentComponents,
+          calibratorControl,
+          analyticalSensitivity,
+          analyticalSpecificity,
+          detectionRange,
+          ceIvdrStatus,
+          ivdClassification,
+          instrumentCompatibility,
+          // =========================
+          // LAB TEST / DIAGNOSTIC SERVICE
+          // =========================
+
+          testName,
+          shortName,
+          testCategory,
+          testCode,
+          clinicalSpecialty,
+          targetDiseaseCondition,
+
+          sampleType,
+          specimen,
+          sampleVolume,
+          sampleCollectionInstructions,
+          sampleStabilityHandling,
+          fastingRequirement,
+
+          testMethod,
+          testPrinciple,
+          testingPlatformAnalyzer,
+          referenceRangeCutoff,
+          unit,
+          resultType,
+
+          turnaroundTime,
+          homeSampleCollection,
+          sampleCollectionSchedule,
+          specialInstructions,
+          reportDelivery,
+
+          partnerLaboratory,
+          branchLocation,
+          partnerLabTestCode,
+
+          partnerLabPrice: Number(partnerLabPrice) || 0,
+          sebaloySellingPrice: Number(sebaloySellingPrice) || 0,
+          homeCollectionCharge: Number(homeCollectionCharge) || 0,
+          discountPromotionalPrice:
+            Number(discountPromotionalPrice) || 0,
+
+          whyThisTest,
+          whenRecommended,
+          clinicalSignificance,
+          sampleRequirements,
+        };
+
+        if (currentImageUrl) {
+          updateData.imageUrl = currentImageUrl;
+        }
         await updateDoc(
           doc(db, "products", editingId),
           updateData
@@ -333,123 +790,306 @@ if (currentImageUrl) {
 
         alert("Product Updated");
       } else {
-await addDoc(
-  collection(db, "products"),
-  {
-    name,
-    strength,
-    size,
-    brand,
-    model,
-    warranty,
+        await addDoc(
+          collection(db, "products"),
+          {
+            name,
+            strength,
+            size,
+            brand,
+            productType,
+            keyIngredients,
+            skinHairType,
+            countryOfOrigin,
+            benefits,
+            howToUse,
+            ingredients,
+            shelfLife,
+            model,
+            warranty,
 
-    category,
-    company,
-    genericName,
-    stripsPerBox,
-    tabletsPerStrip,
-    unitType,
+            category,
+            company,
+            genericName,
+            stripsPerBox,
+            tabletsPerStrip,
+            unitType,
+            description,
+            features,
+            specifications,
 
-    price: Number(price),
-    stock: Number(stock),
-    discount: Number(discount) || 0,
+            price: Number(price),
+            ...(isLabTest ? {} : { stock: Number(stock) }),
+            discount: Number(discount) || 0, featured,
+            images: [
+              currentImageUrl,
+              ...additionalImageUrls,
+            ].filter(Boolean),
+            imageUrl: currentImageUrl,
+            activeIngredient,
+            activeContent,
+            casNumber,
+            chemicalFormula,
+            targetAnimal,
+            applicationPurpose,
+            inclusionRate,
+            physicalForm,
+            storageConditions,
+            kitType,
+            numberOfTests,
+            reagentComponents,
+            calibratorControl,
+            analyticalSensitivity,
+            analyticalSpecificity,
+            detectionRange,
+            ceIvdrStatus,
+            ivdClassification,
+            instrumentCompatibility,
+            // =========================
+            // LAB TEST / DIAGNOSTIC SERVICE
+            // =========================
 
-    imageUrl: currentImageUrl,
-    createdAt: Timestamp.fromDate(new Date()),
-  }
-);        alert("Product Added");
-}
+            testName,
+            shortName,
+            testCategory,
+            testCode,
+            clinicalSpecialty,
+            targetDiseaseCondition,
 
-resetForm();
-fetchProducts();
+            sampleType,
+            specimen,
+            sampleVolume,
+            sampleCollectionInstructions,
+            sampleStabilityHandling,
+            fastingRequirement,
 
-} catch (error: any) {
-  console.error(error);
+            testMethod,
+            testPrinciple,
+            testingPlatformAnalyzer,
+            referenceRangeCutoff,
+            unit,
+            resultType,
 
-  alert(error.message);
-}
-};
+            turnaroundTime,
+            homeSampleCollection,
+            sampleCollectionSchedule,
+            specialInstructions,
+            reportDelivery,
 
-const editProduct = (product: any) => {  
+            partnerLaboratory,
+            branchLocation,
+            partnerLabTestCode,
+
+            partnerLabPrice: Number(partnerLabPrice) || 0,
+            sebaloySellingPrice: Number(sebaloySellingPrice) || 0,
+            homeCollectionCharge: Number(homeCollectionCharge) || 0,
+            discountPromotionalPrice:
+              Number(discountPromotionalPrice) || 0,
+
+            whyThisTest,
+            whenRecommended,
+            clinicalSignificance,
+            sampleRequirements,
+            createdAt: Timestamp.fromDate(new Date()),
+
+          }
+        ); alert("Product Added");
+      }
+
+      resetForm();
+      fetchProducts();
+
+    } catch (error: any) {
+      console.error(error);
+
+      alert(error.message);
+    }
+  };
+
+  const editProduct = (product: any) => {
     setEditingId(product.id);
     setName(product.name);
+    setExistingImages(
+      Array.isArray(product.images)
+        ? product.images
+        : product.imageUrl
+          ? [product.imageUrl]
+          : []
+    );
+
+    setImageFiles([]);
+    setImageFile(null);
     setCategory(product.category);
     setPrice(String(product.price));
     setStock(String(product.stock));
     setDiscount(String(product.discount || 0));
+    setFeatured(product.featured || false);
     setImageUrl(product.imageUrl || "");
-      setCompany(product.company || "");
-setStripsPerBox(String(product.stripsPerBox || ""));
-setTabletsPerStrip(String(product.tabletsPerStrip || ""));
- setUnitType(product.unitType || "");
-setStrength(product.strength || "");
-setGenericName(product.genericName || "");
-setDescription(product.description || "");
-setFeatures(product.features || "");
-setSpecifications(product.specifications || "");
+    setCompany(product.company || "");
+    setBrand(product.brand || "");
+    setSize(product.size || "");
+    setStripsPerBox(String(product.stripsPerBox || ""));
+    setProductType(product.productType || "");
+    setKeyIngredients(product.keyIngredients || "");
+    setSkinHairType(product.skinHairType || "");
+    setCountryOfOrigin(product.countryOfOrigin || "");
+    setBenefits(product.benefits || "");
+    setHowToUse(product.howToUse || "");
+    setIngredients(product.ingredients || "");
+    setShelfLife(product.shelfLife || "");
+    setTabletsPerStrip(String(product.tabletsPerStrip || ""));
+    setUnitType(product.unitType || "");
+    setStrength(product.strength || "");
+    setGenericName(product.genericName || "");
+    setDescription(product.description || "");
+    setFeatures(product.features || "");
+    setSpecifications(product.specifications || "");
 
-setPharmacology(product.pharmacology || "");
-setIndication(product.indication || "");
-setDosage(product.dosage || "");
-setAdministration(product.administration || "");
-setSideEffects(product.sideEffects || "");
-setPrecautions(product.precautions || "");
-setPregnancyLactation(product.pregnancyLactation || "");
-setDrugInteraction(product.drugInteraction || "");
-setStorageInfo(product.storageInfo || "");
+    setPharmacology(product.pharmacology || "");
+    // =========================
+    // MEDICAL DEVICE FIELDS
+    // =========================
+    setModel(product.model || "");
+    setWarranty(product.warranty || "");
+
+    // =========================
+    // LAB TEST / DIAGNOSTIC SERVICE
+    // =========================
+
+    setTestName(product.testName || "");
+    setShortName(product.shortName || "");
+    setTestCategory(product.testCategory || "");
+    setTestCode(product.testCode || "");
+    setClinicalSpecialty(product.clinicalSpecialty || "");
+    setTargetDiseaseCondition(product.targetDiseaseCondition || "");
+
+    setSampleType(product.sampleType || "");
+    setSpecimen(product.specimen || "");
+    setSampleVolume(product.sampleVolume || "");
+    setSampleCollectionInstructions(
+      product.sampleCollectionInstructions || ""
+    );
+    setSampleStabilityHandling(
+      product.sampleStabilityHandling || ""
+    );
+    setFastingRequirement(product.fastingRequirement || "");
+
+    setTestMethod(product.testMethod || "");
+    setTestPrinciple(product.testPrinciple || "");
+    setTestingPlatformAnalyzer(
+      product.testingPlatformAnalyzer || ""
+    );
+    setReferenceRangeCutoff(
+      product.referenceRangeCutoff || ""
+    );
+    setUnit(product.unit || "");
+    setResultType(product.resultType || "");
+
+    setTurnaroundTime(product.turnaroundTime || "");
+    setHomeSampleCollection(
+      product.homeSampleCollection || ""
+    );
+    setSampleCollectionSchedule(
+      product.sampleCollectionSchedule || ""
+    );
+    setSpecialInstructions(
+      product.specialInstructions || ""
+    );
+    setReportDelivery(product.reportDelivery || "");
+
+    setPartnerLaboratory(
+      product.partnerLaboratory || ""
+    );
+    setBranchLocation(product.branchLocation || "");
+    setPartnerLabTestCode(
+      product.partnerLabTestCode || ""
+    );
+
+    setPartnerLabPrice(
+      product.partnerLabPrice || ""
+    );
+    setSebaloySellingPrice(
+      product.sebaloySellingPrice || ""
+    );
+    setHomeCollectionCharge(
+      product.homeCollectionCharge || ""
+    );
+    setDiscountPromotionalPrice(
+      product.discountPromotionalPrice || ""
+    );
+
+    setWhyThisTest(product.whyThisTest || "");
+    setWhenRecommended(
+      product.whenRecommended || ""
+    );
+    setClinicalSignificance(
+      product.clinicalSignificance || ""
+    );
+    setSampleRequirements(
+      product.sampleRequirements || ""
+    );
+    setIndication(product.indication || "");
+    setDosage(product.dosage || "");
+    setAdministration(product.administration || "");
+    setSideEffects(product.sideEffects || "");
+    setPrecautions(product.precautions || "");
+    setPregnancyLactation(product.pregnancyLactation || "");
+    setDrugInteraction(product.drugInteraction || "");
+    setStorageInfo(product.storageInfo || "");
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
   const deleteOrder = async (id: string) => {
-  const ok = window.confirm(
-    "Are you sure you want to delete this order?"
-  );
-
-  if (!ok) return;
-
-  try {
-    await deleteDoc(doc(db, "orders", id));
-
-    setOrders((prev) =>
-      prev.filter((order) => order.id !== id)
+    const ok = window.confirm(
+      "Are you sure you want to delete this order?"
     );
 
-    alert("Order deleted successfully");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to delete order");
-  }
-};
-const updateOrderStatus = async (
-  id: string,
-  status: string
-) => {
-  try {
-    await updateDoc(
-      doc(db, "orders", id),
-      {
-        status,
-      }
-    );
+    if (!ok) return;
 
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === id
-          ? { ...order, status }
-          : order
-      )
-    );
-  } catch (error) {
-    console.error(error);
-    alert("Status update failed");
-  }
-};
+    try {
+      await deleteDoc(doc(db, "orders", id));
 
-const deleteProduct = async (
+      setOrders((prev) =>
+        prev.filter((order) => order.id !== id)
+      );
+
+      alert("Order deleted successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete order");
+    }
+  };
+  const updateOrderStatus = async (
+    id: string,
+    status: string
+  ) => {
+    try {
+      await updateDoc(
+        doc(db, "orders", id),
+        {
+          status,
+        }
+      );
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === id
+            ? { ...order, status }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Status update failed");
+    }
+  };
+
+  const deleteProduct = async (
     id: string
-) => {    const ok = confirm(
+  ) => {
+    const ok = confirm(
       "Delete this product?"
     );
 
@@ -466,824 +1106,985 @@ const deleteProduct = async (
       alert("Delete Failed");
     }
   };
+  const updateTestBookingStatus = async (
+    bookingId: string,
+    newStatus: string
+  ) => {
+    try {
+      await updateDoc(doc(db, "testBookings", bookingId), {
+        status: newStatus,
+      });
 
+      setTestBookings((prev) =>
+        prev.map((booking) =>
+          booking.id === bookingId
+            ? { ...booking, status: newStatus }
+            : booking
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update booking status");
+    }
+  };
+  const deleteTestBooking = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to delete this booking?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "testBookings", bookingId));
+
+      setTestBookings((prev) =>
+        prev.filter((booking) => booking.id !== bookingId)
+      );
+    } catch (error) {
+      console.error("Error deleting test booking:", error);
+      alert("Failed to delete booking");
+    }
+  };
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8 rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="max-w-7xl mx-auto p-6">
+      <DashboardHeader onLogout={logout} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          title="Total Sales"
+          value={`৳${totalSales.toLocaleString()}`}
+          color="bg-green-500"
+        />
 
-    <div>
-      <h1 className="text-3xl font-bold text-slate-800">
-        🛡️ Sebaloy Admin Dashboard
-      </h1>
+        <StatCard
+          title="Orders"
+          value={String(totalOrders)}
+          color="bg-blue-500"
+        />
 
-      <p className="mt-2 text-sm text-slate-500">
-        Manage Products, Orders & Inventory
-        </p>
-    </div>
-          <button
-  onClick={logout}
-  className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl font-medium transition"
->
-  Logout
-</button>
+        <StatCard
+          title="Products"
+          value={String(totalProducts)}
+          color="bg-purple-500"
+        />
 
-    </div>{/* ================= Order Workflow ================= */}
-
-<div className="mb-4">
-  <h2 className="text-lg font-bold text-slate-800 mb-2">
-    📦 Order Workflow
-  </h2>
-
-<div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-<KpiPill
-  title={`Pending (${pendingOrders})`}
-  value=""
-  icon="🟡"
-  onClick={() => {
-    setSelectedStatus("pending");
-    setShowOrders(true);
-    orderSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-        block: "start",
-    });
-  }}
-/>
-<div className="hidden lg:flex items-center text-slate-300 text-2xl px-2">
-  →
-</div>
-    <KpiPill
-      title={`Processing (${processingOrders})`}
-      value=""
-      icon="🔵"
-      onClick={() => {
-        setSelectedStatus("processing");
-        setShowOrders(true);
-        orderSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }}
-    />
-
-    <span className="text-slate-400 font-bold text-lg">→</span>
-
-    <KpiPill
-      title={`Shipped (${shippedOrders})`}
-      value=""
-      icon="🟣"
-      onClick={() => {
-        setSelectedStatus("shipped");
-        setShowOrders(true);
-        orderSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }}
-    />
-
-    <span className="text-slate-400 font-bold text-lg">→</span>
-
-    <KpiPill
-      title={`Delivered (${deliveredOrders})`}
-      value=""
-      icon="🟢"
-      onClick={() => {
-        setSelectedStatus("delivered");
-        setShowOrders(true);
-        orderSectionRef.current?.scrollIntoView({
-          behavior: "smooth",
-            block: "start",
-        });
-      }}
-    />
-
-  </div>
-{/* ================= Business ================= */}
-
-<div className="mb-4">
-  <h2 className="text-lg font-bold text-slate-800 mb-2">
-    📊 Business
-  </h2>
-
-<div className="flex items-center gap-4 overflow-x-auto py-2">
-<KpiPill
-  title={`Sales (৳${totalSales.toLocaleString()})`}
-  value=""
-  icon="💰"
-  onClick={() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }}
-/>
-<span className="text-slate-400 text-xl">→</span>
-<KpiPill
-  title={`Orders (${orders.length})`}
-  value=""
-  icon="📦"
-  onClick={() => {
-    setSelectedStatus("");
-    setShowOrders(true);
-
-    orderSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }}
-/>
-  </div>
-</div>
-{/* ================= Inventory ================= */}
-
-<div className="mb-4">
-  <h2 className="text-lg font-bold text-slate-800 mb-2">
-    📦 Inventory
-  </h2>
-
-<div className="flex items-center gap-4 overflow-x-auto py-2">
-<KpiPill
-  title={`Low Stock (${lowStockProducts.length})`}
-  value=""
-  icon="🟠"
-  onClick={() => {
-    setProductFilter("low");
-    setShowProducts(true);
-
-    productSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }}
-/>
-<KpiPill
-  title={`Out of Stock (${outOfStockProducts.length})`}
-  value=""
-  icon="🔴"
-  onClick={() => {
-    setProductFilter("out");
-    setShowProducts(true);
-
-    productSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }}
-/>
-  </div>
-</div>
-</div>   
+        <StatCard
+          title="Low Stock"
+          value={String(lowStockProducts.length)}
+          color="bg-red-500"
+        />
       </div>
-{/* CSV Import */}
+      <div className="space-y-6">
+        <OrderWorkflow
+          pendingOrders={pendingOrders}
+          processingOrders={processingOrders}
+          shippedOrders={shippedOrders}
+          deliveredOrders={deliveredOrders}
+          onPendingClick={() => {
+            setSelectedStatus("pending");
+            setShowOrders(true);
+            orderSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onProcessingClick={() => {
+            setSelectedStatus("processing");
+            setShowOrders(true);
+            orderSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onShippedClick={() => {
+            setSelectedStatus("shipped");
+            setShowOrders(true);
+            orderSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
 
-<input
-  type="file"
-  accept=".csv"
-  onChange={(e) =>
-    setCsvFile(e.target.files?.[0] || null)
-  }
-  className="mb-4 border p-2 rounded"
-/>
-
-<button
-  type="button"
-  onClick={handleCsvImport}
-  className="mb-6 bg-green-600 text-white px-4 py-2 rounded"
->
-  Import CSV
-</button>
-<div
-onClick={() => setShowOrders(!showOrders)}
-  className="bg-teal-600 text-white rounded-lg px-5 py-4 mb-3 flex justify-between items-center cursor-pointer"
->
-  <h2 className="text-xl font-bold">
-        📦 Orders
-  </h2>
-
-  <span className="text-2xl font-bold">
-    {showOrders ? "−" : "+"}
-  </span>
-</div>
-
-{showOrders && (
-<>
-<input
-  type="text"
-  placeholder="Search by name or phone..."
-  value={searchOrder}
-  onChange={(e) => setSearchOrder(e.target.value)}
-  className="w-full border p-3 rounded-lg mb-4"
-/>
-<div className="space-y-4 mb-8">
-{filteredOrders
-  .filter(
-    (order) =>
-      order.customerName
-        ?.toLowerCase()
-        .includes(searchOrder.toLowerCase()) ||
-      order.phone?.includes(searchOrder)
-  )
-.map((order: any) => (
-  <div
-    key={order.id}
-    className="bg-white border rounded-lg p-4"
-  >    
-      <p>
-        <strong>Order ID:</strong> {order.id}
-      </p>
-
-      <p>
-        <strong>Name:</strong> {order.customerName}
-      </p>
-
-      <p>
-        <strong>Phone:</strong> {order.phone}
-      </p>
-
-      <p>
-        <strong>Address:</strong> {order.address}
-      </p>
-
-      <p>
-        <strong>Total:</strong> ৳{order.total}
-      </p>
-
-<div className="mt-2">
-  <strong>Status:</strong>{" "}
-
-  <span
-    className={`px-3 py-1 rounded-full text-white text-sm font-semibold
-      ${
-order.status === "pending"
-  ? "bg-yellow-500"
-  : order.status === "processing"
-  ? "bg-blue-500"
-  : order.status === "shipped"
-  ? "bg-purple-500"
-  : "bg-green-600"      }`}
-  >
-    {order.status}
-  </span>
-</div>
-      <p>
-        <strong>Date:</strong>{" "}
-        {order.createdAt?.toDate
-          ? order.createdAt
-              .toDate()
-              .toLocaleString()
-          : "N/A"}
-      </p>
-<div className="mt-3">
-  <strong>Products:</strong>
-
-  <ul className="list-disc ml-5 mt-2">
-    {order.items?.map(
-      (item: any, index: number) => (
-        <li key={index}>
-          {item.name} × {item.quantity}
-        </li>
-      )
-    )}
-  </ul>
-</div>
-      <select
-        value={order.status}
-        onChange={(e) =>
-          updateOrderStatus(
-            order.id,
-            e.target.value
-          )
-        }
-        className="border p-2 rounded mt-3 mr-3"
-      >
-        <option value="pending">
-          Pending
-        </option>
-
-        <option value="processing">
-          Processing
-        </option>
-        <option value="shipped">Shipped</option>
-
-
-        <option value="delivered">
-          Delivered
-        </option>
-      </select>
-
-      <button
-        onClick={() => deleteOrder(order.id)}
-        className="bg-red-500 text-white px-3 py-2 rounded"
-      >
-        Delete Order
-      </button>
-    </div>
-  ))}
-</div>
-</>
-)}
-<div
-  onClick={() => setShowProducts(!showProducts)}
-  className="bg-teal-600 text-white rounded-lg px-5 py-4 mb-3 flex justify-between items-center cursor-pointer"
->
-  <h2 className="text-xl font-bold">
-
-    📦 Add Product
-  </h2>
-
-  <span className="text-2xl font-bold">
-    {showAddProduct ? "−" : "+"}
-  </span>
-</div>
-
-{showAddProduct && (
-      <form
-        onSubmit={saveProduct}
-        className="bg-white p-6 rounded-lg shadow mb-8 space-y-4"
-      >
-        <h2 className="text-2xl font-semibold">
-          {editingId
-            ? "Edit Product"
-            : "Add Product"}
-        </h2>
-
-        <input
-          type="text"
-          placeholder="Product Name"
-          value={name}
-          onChange={(e) =>
-            setName(e.target.value)
-          }
-          className="w-full border p-3 rounded"
-          required
-        />
-        <h3 className="text-xl font-bold mt-8 mb-4 border-b pb-2">
-  📝 Product Information
-</h3>
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Description
-  </label>
-
-  <textarea
-    value={description}
-    onChange={(e) => setDescription(e.target.value)}
-    rows={5}
-    className="w-full border rounded p-3"
-    placeholder="Enter product description"
-  />
-</div>
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Features
-  </label>
-
-  <textarea
-    value={features}
-    onChange={(e) => setFeatures(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter product features"
-  />
-</div>
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Specifications
-  </label>
-  <textarea
-  value={specifications}
-  onChange={(e) => setSpecifications(e.target.value)}
-  rows={4}
-  className="w-full border rounded p-3"
-  placeholder="Enter product specifications"
-/>
-</div>
-        {category === "Medicine" && (
-  <>
-<input
-  type="text"
-  placeholder="Generic Name"
-  value={genericName}
-  onChange={(e) => setGenericName(e.target.value)}
-  className="w-full border rounded-lg p-3"
-/>
-      <input
-  type="text"
-  placeholder="Strength (e.g. 500 mg, 20 mg, 5 ml)"
-  value={strength}
-  onChange={(e) => setStrength(e.target.value)}
-  className="w-full border p-3 rounded"
-  required
-/>
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Pharmacology
-  </label>
-  <textarea
-    value={pharmacology}
-    onChange={(e) => setPharmacology(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter pharmacology"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Indication
-  </label>
-  <textarea
-    value={indication}
-    onChange={(e) => setIndication(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter indications"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Dosage
-  </label>
-  <textarea
-    value={dosage}
-    onChange={(e) => setDosage(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter dosage"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Administration
-  </label>
-  <textarea
-    value={administration}
-    onChange={(e) => setAdministration(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter administration instructions"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Side Effects
-  </label>
-  <textarea
-    value={sideEffects}
-    onChange={(e) => setSideEffects(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter side effects"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Precautions
-  </label>
-  <textarea
-    value={precautions}
-    onChange={(e) => setPrecautions(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter precautions"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Pregnancy & Lactation
-  </label>
-  <textarea
-    value={pregnancyLactation}
-    onChange={(e) => setPregnancyLactation(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter pregnancy & lactation information"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Drug Interaction
-  </label>
-  <textarea
-    value={drugInteraction}
-    onChange={(e) => setDrugInteraction(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter drug interactions"
-  />
-</div>
-
-<div className="col-span-2">
-  <label className="block text-sm font-medium mb-2">
-    Storage
-  </label>
-  <textarea
-    value={storageInfo}
-    onChange={(e) => setStorageInfo(e.target.value)}
-    rows={4}
-    className="w-full border rounded p-3"
-    placeholder="Enter storage instructions"
-  />
-</div>
-<input
-  type="text"
-  placeholder="Company"
-  value={company}
-  onChange={(e) => setCompany(e.target.value)}
-  className="w-full border p-3 rounded"
-/>
-<input
-  type="number"
-  placeholder="Strips Per Box"
-  value={stripsPerBox}
-  onChange={(e) => setStripsPerBox(e.target.value)}
-  className="w-full border p-3 rounded"
-/><input
-  type="number"
-  placeholder="Tablets Per Strip"
-  value={tabletsPerStrip}
-  onChange={(e) => setTabletsPerStrip(e.target.value)}
-  className="w-full border p-3 rounded"
-/>
-  </>
-)}
-<select
-  value={category}
-  onChange={(e) => setCategory(e.target.value)}
-  className="w-full border p-3 rounded-lg"
->
-  <option value="">Select Category</option>
-
-  <option value="Medicine">Medicine</option>
-
-<option value="Baby & Mom Care">
-  Baby & Mom Care
-</option>
-  <option value="Healthcare">Healthcare</option>
-
-  <option value="Medical Device">Medical Device</option>
-
-  <option value="Personal Care">Personal Care</option>
-</select>
-<select
-  value={unitType}
-  onChange={(e) => setUnitType(e.target.value)}
-  className="w-full border p-3 rounded-lg"
->
-  <option value="">Select Unit Type</option>
-
-  {category === "Medicine" && (
-    <>
-      <option value="Strip">Strip</option>
-      <option value="Box">Box</option>
-      <option value="Tablet">Tablet</option>
-      <option value="Capsule">Capsule</option>
-    </>
-  )}
-
-  {(category === "Baby & Mom Care" ||
-    category === "Healthcare" ||
-    category === "Personal Care") && (
-    <>
-      <option value="Bottle">Bottle</option>
-      <option value="Piece">Piece</option>
-    </>
-  )}
-
-  {category === "Medical Device" && (
-    <option value="Piece">Piece</option>
-  )}
-</select>
-<input
-type="number"
- placeholder="Price"
-value={price}
-onChange={(e) =>
-setPrice(e.target.value)
- }
-          className="w-full border p-3 rounded"
-          required
+          onDeliveredClick={() => {
+            setSelectedStatus("delivered");
+            setShowOrders(true);
+            orderSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
         />
 
-        <input
-          type="number"
-          placeholder="Stock"
-          value={stock}
-          onChange={(e) =>
-            setStock(e.target.value)
-          }
-          className="w-full border p-3 rounded"
-          required
+        <BusinessStats
+          todaySales={todaySales}
+          monthSales={monthSales}
+          onSalesClick={() => {
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+          }}
+          onOrdersClick={() => {
+            setSelectedStatus("");
+            setShowOrders(true);
+
+            orderSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
         />
-        <input
-  type="number"
-  placeholder="Discount %"
-  value={discount}
-  onChange={(e) => setDiscount(e.target.value)}
-  className="w-full border p-3 rounded"
-  required
-/>
-<input
-  type="text"
-  placeholder="Image URL"
-  value={imageUrl}
-  onChange={(e) => setImageUrl(e.target.value)}
-  className="w-full border p-3 rounded"
-/>
+        <InventoryStats
+          totalProducts={totalProducts}
+          lowStockProducts={lowStockProducts.length}
+          outOfStockProducts={outOfStockProducts.length}
+          activeProducts={activeProducts}
+          onTotalProductsClick={() => {
+            setProductFilter("all");
+            setShowProducts(true);
+            productSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onLowStockClick={() => {
+            setProductFilter("low");
+            setShowProducts(true);
+            productSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onOutOfStockClick={() => {
+            setProductFilter("out");
+            setShowProducts(true);
+            productSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onActiveProductsClick={() => {
+            setProductFilter("all");
+            setShowProducts(true);
+            productSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-xl font-semibold mb-5">
+            🧪 Diagnostic Test Bookings
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            <div className="border border-blue-100 rounded-xl p-4">
+              <p className="text-sm text-slate-500">
+                Total Bookings
+              </p>
+              <p className="text-2xl font-bold text-blue-600 mt-2">
+                {totalTestBookings}
+              </p>
+            </div>
+
+            <div className="border border-yellow-100 rounded-xl p-4">
+              <p className="text-sm text-slate-500">
+                Pending
+              </p>
+              <p className="text-2xl font-bold text-yellow-600 mt-2">
+                {pendingTestBookings}
+              </p>
+            </div>
+
+            <div className="border border-purple-100 rounded-xl p-4">
+              <p className="text-sm text-slate-500">
+                Confirmed
+              </p>
+              <p className="text-2xl font-bold text-purple-600 mt-2">
+                {confirmedTestBookings}
+              </p>
+            </div>
+
+            <div className="border border-green-100 rounded-xl p-4">
+              <p className="text-sm text-slate-500">
+                Completed
+              </p>
+              <p className="text-2xl font-bold text-green-600 mt-2">
+                {completedTestBookings}
+              </p>
+            </div>
+          </div>
+        </div>
+        {/* =========================
+    RECENT DIAGNOSTIC BOOKINGS
+========================= */}
+        <div className="mt-6 bg-white border rounded-2xl overflow-hidden">
+
+          {/* Header */}
+          <button
+            type="button"
+            onClick={() => setShowDiagnosticBookings(!showDiagnosticBookings)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">
+                {showDiagnosticBookings ? "➖" : "➕"}
+              </span>
+
+              <div className="text-left">
+                <h2 className="text-lg font-bold text-slate-800">
+                  🧪 Recent Diagnostic Bookings
+                  <span className="ml-2 text-sm text-blue-600">
+                    {testBookings.length}
+                  </span>
+                </h2>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Latest diagnostic test booking requests
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Booking Table */}
+          {showDiagnosticBookings && (
+            <div className="border-t overflow-x-auto">
+
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="text-left px-4 py-3">Patient</th>
+                    <th className="text-left px-4 py-3">Mobile</th>
+                    <th className="text-left px-4 py-3">Age / Gender</th>
+                    <th className="text-left px-4 py-3">Test Date</th>
+                    <th className="text-left px-4 py-3">Collection</th>
+                    <th className="text-left px-4 py-3">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {testBookings.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center text-slate-500"
+                      >
+                        No diagnostic test bookings found.
+                      </td>
+                    </tr>
+                  ) : (
+                    testBookings.slice(0, 10).map(
+                      (booking: any, index: number) => (
+                        <tr
+                          key={booking.id}
+                          className="border-b last:border-b-0 hover:bg-slate-50"
+                        >
+                          {/* Patient */}
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-slate-800">
+                              {booking.patientName || "N/A"}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              Sebaloy ID: {booking.sebaloyBookingId || "N/A"}
+                            </p>                         
+                             </td>
+
+                          {/* Mobile */}
+                          <td className="px-4 py-3">
+                            {booking.mobile || "N/A"}
+                          </td>
+
+                          {/* Age / Gender */}
+                          <td className="px-4 py-3">
+                            {booking.age || "N/A"}
+                            {booking.gender
+                              ? ` / ${booking.gender}`
+                              : ""}
+                          </td>
+
+                          {/* Test Date */}
+                          <td className="px-4 py-3">
+                            {booking.bookingDate || "N/A"}
+                          </td>
+
+                          {/* Collection */}
+                          <td className="px-4 py-3">
+                            {booking.homeCollection
+                              ? "🏠 Home Collection"
+                              : "🏥 Laboratory Visit"}
+                          </td>
+                          {/* Status */}
+                          <td className="px-4 py-3">
+                            <select
+                              value={booking.status || "pending"}
+                              onChange={(e) =>
+                                updateTestBookingStatus(
+                                  booking.id,
+                                  e.target.value
+                                )
+                              }
+                              className={`px-3 py-2 rounded-lg text-sm font-semibold border cursor-pointer outline-none
+      ${booking.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                  : booking.status === "confirmed"
+                                    ? "bg-blue-100 text-blue-700 border-blue-200"
+                                    : booking.status === "completed"
+                                      ? "bg-green-100 text-green-700 border-green-200"
+                                      : "bg-slate-100 text-slate-700 border-slate-200"
+                                }`}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="completed">Completed</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => deleteTestBooking(booking.id)}
+                              className="px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    )
+                  )}
+                </tbody>
+              </table>
+
+            </div>
+          )}
+        </div>
+
+        {/* Recent Orders */}
+        <RecentOrders orders={recentOrders} />
+        {/* CSV Import */}
+
         <input
           type="file"
-          accept="image/*"
+          accept=".csv"
           onChange={(e) =>
-            setImageFile(
-              e.target.files?.[0] || null
-            )
+            setCsvFile(e.target.files?.[0] || null)
           }
-          className="w-full border p-3 rounded"
+          className="mb-4 border p-2 rounded"
         />
 
         <button
-          type="submit"
-          className="w-full bg-teal-600 text-white py-3 rounded"
+          type="button"
+          onClick={handleCsvImport}
+          className="mb-6 bg-green-600 text-white px-4 py-2 rounded"
         >
-          {editingId
-            ? "Update Product"
-            : "Add Product"}
+          Import CSV
         </button>
-      </form>
-)}
-<div ref={orderSectionRef}onClick={() => {
-  setSelectedStatus("");
-setShowOrders(true);
-}}  
-className="bg-blue-600 text-white rounded-lg px-5 py-4 mb-3 mt-8 flex justify-between items-center cursor-pointer"
->
-  <h2 className="text-xl font-bold">
-    📦 Product List
-  </h2>
+        <OrdersSection
+          showOrders={showOrders}
+          setShowOrders={setShowOrders}
+          searchOrder={searchOrder}
+          setSearchOrder={setSearchOrder}
+          filteredOrders={filteredOrders}
+          updateOrderStatus={updateOrderStatus}
+          deleteOrder={deleteOrder}
+        />
 
-  <span className="text-2xl font-bold">
-    {showProducts ? "−" : "+"}
-  </span>
-</div>
+        <div
+          onClick={() => setShowAddProduct(!showAddProduct)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-4 mb-4 flex items-center justify-between cursor-pointer transition-all duration-300 shadow-sm"
+        >
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            📦 Add Product
+          </h2>
 
-{showProducts && (
-<>
-      {lowStockProducts.length > 0 && (
-        <div className="bg-red-100 border border-red-300 p-4 rounded-xl mb-4">
-          <h3 className="font-bold text-red-700 mb-2">
-            ⚠ Low Stock Products
-          </h3>
-
-          {lowStockProducts.map((product: any) => (
-            <p key={product.id}>
-              {product.name} (Stock: {product.stock})
-            </p>
-          ))}
+          <span className="text-3xl font-light">
+            {showAddProduct ? "−" : "+"}
+          </span>
         </div>
-      )}
-      <button
-  onClick={deleteSelectedProducts}
-  disabled={selectedProducts.length === 0}
-  className="bg-red-600 text-white px-4 py-2 rounded mb-4"
->
-  Delete Selected ({selectedProducts.length})
-</button>
-      <div
-        ref={productSectionRef}
-        className="grid md:grid-cols-2 gap-6"
-      >
-        {filteredProducts.map((product: any) => (
-          <div
-            key={product.id}
-            className="bg-white border rounded-xl shadow-sm overflow-hidden"
-          >
-      <div className="p-3">
-  <input
-    type="checkbox"
-    checked={selectedProducts.includes(product.id)}
-    onChange={() => toggleProductSelection(product.id)}
-    className="w-5 h-5"
-  />
-</div>
-      {product.imageUrl && (
-        <div className="h-56 flex items-center justify-center bg-gray-50 p-4">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="max-h-full max-w-full object-contain"
-          />
+        {
+          showAddProduct && (
+            <form
+              onSubmit={saveProduct}
+              className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8"
+            >
+              <h2 className="text-2xl font-semibold">
+                {editingId
+                  ? "Edit Product"
+                  : "Add Product"}
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Product Name - Hidden for Lab Tests */}
+                {category !== "Lab-Tests" && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Product Name
+                    </label>
+
+                    <input
+                      type="text"
+                      placeholder="Enter Product Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                      required
+                    />
+                  </div>
+                )}
+                {category === "Medicine" && (
+                  <MedicineFields
+                    genericName={genericName}
+                    setGenericName={setGenericName}
+                    strength={strength}
+                    setStrength={setStrength}
+                    size={size}
+                    setSize={setSize}
+                    brand={brand}
+                    setBrand={setBrand}
+                    pharmacology={pharmacology}
+                    setPharmacology={setPharmacology}
+                    indication={indication}
+                    setIndication={setIndication}
+                    dosage={dosage}
+                    setDosage={setDosage}
+                    administration={administration}
+                    setAdministration={setAdministration}
+                    sideEffects={sideEffects}
+                    setSideEffects={setSideEffects}
+                    precautions={precautions}
+                    setPrecautions={setPrecautions}
+                    pregnancyLactation={pregnancyLactation}
+                    setPregnancyLactation={setPregnancyLactation}
+                    drugInteraction={drugInteraction}
+                    setDrugInteraction={setDrugInteraction}
+                    storageInfo={storageInfo}
+                    setStorageInfo={setStorageInfo}
+                    company={company}
+                    setCompany={setCompany}
+                    stripsPerBox={stripsPerBox}
+                    setStripsPerBox={setStripsPerBox}
+                    tabletsPerStrip={tabletsPerStrip}
+                    setTabletsPerStrip={setTabletsPerStrip}
+                  />
+                )}
+                {category === "Lab Test" && (
+                  <div className="lg:col-span-2">
+                    <h3 className="text-xl font-bold mt-8 mb-4 border-b pb-2">
+                      Test Information
+                    </h3>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Test Type
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Molecular Test, Blood Test"
+                          className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Sample Type
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Blood, Serum, Urine"
+                          className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {category === "Baby & Mom Care" && (
+                  <BabyMomFields
+                    brand={brand}
+                    setBrand={setBrand}
+                    size={size}
+                    setSize={setSize}
+                    strength={strength}
+                    setStrength={setStrength}
+                    company={company}
+                    setCompany={setCompany}
+                  />
+
+                )}
+                {category === "Healthcare" && (
+                  <HealthcareFields
+                    brand={brand}
+                    setBrand={setBrand}
+                    size={size}
+                    setSize={setSize}
+                    strength={strength}
+                    setStrength={setStrength}
+                    company={company}
+                    setCompany={setCompany}
+                  />
+                )}
+                {category === "Personal Care" && (
+                  <PersonalCareFields
+                    brand={brand}
+                    setBrand={setBrand}
+                    size={size}
+                    setSize={setSize}
+                    strength={strength}
+                    setStrength={setStrength}
+                    company={company}
+                    setCompany={setCompany}
+                    productType={productType}
+                    setProductType={setProductType}
+                    keyIngredients={keyIngredients}
+                    setKeyIngredients={setKeyIngredients}
+                    skinHairType={skinHairType}
+                    setSkinHairType={setSkinHairType}
+                    countryOfOrigin={countryOfOrigin}
+                    setCountryOfOrigin={setCountryOfOrigin}
+                    benefits={benefits}
+                    setBenefits={setBenefits}
+                    howToUse={howToUse}
+                    setHowToUse={setHowToUse}
+                    ingredients={ingredients}
+                    setIngredients={setIngredients}
+                    shelfLife={shelfLife}
+                    setShelfLife={setShelfLife}
+                  />
+                )}
+                {/* =========================
+                  MEDICAL DEVICES
+              ========================== */}
+
+                {category === "Medical Devices" && (
+                  <MedicalDeviceFields
+                    brand={brand}
+                    setBrand={setBrand}
+
+                    company={company}
+                    setCompany={setCompany}
+
+                    productType={productType}
+                    setProductType={setProductType}
+
+                    model={model}
+                    setModel={setModel}
+
+                    size={size}
+                    setSize={setSize}
+
+                    warranty={warranty}
+                    setWarranty={setWarranty}
+
+                    countryOfOrigin={countryOfOrigin}
+                    setCountryOfOrigin={setCountryOfOrigin}
+
+                    specifications={specifications}
+                    setSpecifications={setSpecifications}
+
+                    kitType={kitType}
+                    setKitType={setKitType}
+
+                    numberOfTests={numberOfTests}
+                    setNumberOfTests={setNumberOfTests}
+
+                    reagentComponents={reagentComponents}
+                    setReagentComponents={setReagentComponents}
+
+                    calibratorControl={calibratorControl}
+                    setCalibratorControl={setCalibratorControl}
+
+                    analyticalSensitivity={analyticalSensitivity}
+                    setAnalyticalSensitivity={setAnalyticalSensitivity}
+
+                    analyticalSpecificity={analyticalSpecificity}
+                    setAnalyticalSpecificity={setAnalyticalSpecificity}
+
+                    detectionRange={detectionRange}
+                    setDetectionRange={setDetectionRange}
+
+                    ceIvdrStatus={ceIvdrStatus}
+                    setCeIvdrStatus={setCeIvdrStatus}
+
+                    ivdClassification={ivdClassification}
+                    setIvdClassification={setIvdClassification}
+
+                    instrumentCompatibility={instrumentCompatibility}
+                    setInstrumentCompatibility={setInstrumentCompatibility}
+                  />
+                )}
+                {/* =========================
+    LAB TEST / DIAGNOSTIC SERVICE
+========================== */}
+
+                {category?.toLowerCase().replace(/[^a-z]/g, "") === "labtests" && (
+                  <LabTestFields
+
+                    testName={testName}
+                    setTestName={setTestName}
+
+                    shortName={shortName}
+                    setShortName={setShortName}
+
+                    testCategory={testCategory}
+                    setTestCategory={setTestCategory}
+
+                    testCode={testCode}
+                    setTestCode={setTestCode}
+
+                    clinicalSpecialty={clinicalSpecialty}
+                    setClinicalSpecialty={setClinicalSpecialty}
+
+                    targetDiseaseCondition={targetDiseaseCondition}
+                    setTargetDiseaseCondition={setTargetDiseaseCondition}
+
+                    sampleType={sampleType}
+                    setSampleType={setSampleType}
+
+                    specimen={specimen}
+                    setSpecimen={setSpecimen}
+
+                    sampleVolume={sampleVolume}
+                    setSampleVolume={setSampleVolume}
+
+                    sampleCollectionInstructions={sampleCollectionInstructions}
+                    setSampleCollectionInstructions={setSampleCollectionInstructions}
+
+                    sampleStabilityHandling={sampleStabilityHandling}
+                    setSampleStabilityHandling={setSampleStabilityHandling}
+
+                    fastingRequirement={fastingRequirement}
+                    setFastingRequirement={setFastingRequirement}
+
+                    testMethod={testMethod}
+                    setTestMethod={setTestMethod}
+
+                    testPrinciple={testPrinciple}
+                    setTestPrinciple={setTestPrinciple}
+
+                    testingPlatformAnalyzer={testingPlatformAnalyzer}
+                    setTestingPlatformAnalyzer={setTestingPlatformAnalyzer}
+
+                    referenceRangeCutoff={referenceRangeCutoff}
+                    setReferenceRangeCutoff={setReferenceRangeCutoff}
+
+                    unit={unit}
+                    setUnit={setUnit}
+
+                    resultType={resultType}
+                    setResultType={setResultType}
+
+                    turnaroundTime={turnaroundTime}
+                    setTurnaroundTime={setTurnaroundTime}
+
+                    homeSampleCollection={homeSampleCollection}
+                    setHomeSampleCollection={setHomeSampleCollection}
+
+                    sampleCollectionSchedule={sampleCollectionSchedule}
+                    setSampleCollectionSchedule={setSampleCollectionSchedule}
+
+                    specialInstructions={specialInstructions}
+                    setSpecialInstructions={setSpecialInstructions}
+
+                    reportDelivery={reportDelivery}
+                    setReportDelivery={setReportDelivery}
+
+                    partnerLaboratory={partnerLaboratory}
+                    setPartnerLaboratory={setPartnerLaboratory}
+
+                    branchLocation={branchLocation}
+                    setBranchLocation={setBranchLocation}
+
+                    partnerLabTestCode={partnerLabTestCode}
+                    setPartnerLabTestCode={setPartnerLabTestCode}
+
+                    partnerLabPrice={partnerLabPrice}
+                    setPartnerLabPrice={setPartnerLabPrice}
+
+                    sebaloySellingPrice={sebaloySellingPrice}
+                    setSebaloySellingPrice={setSebaloySellingPrice}
+
+                    homeCollectionCharge={homeCollectionCharge}
+                    setHomeCollectionCharge={setHomeCollectionCharge}
+
+                    discountPromotionalPrice={discountPromotionalPrice}
+                    setDiscountPromotionalPrice={setDiscountPromotionalPrice}
+
+                    whyThisTest={whyThisTest}
+                    setWhyThisTest={setWhyThisTest}
+
+                    whenRecommended={whenRecommended}
+                    setWhenRecommended={setWhenRecommended}
+
+                    clinicalSignificance={clinicalSignificance}
+                    setClinicalSignificance={setClinicalSignificance}
+
+                    sampleRequirements={sampleRequirements}
+                    setSampleRequirements={setSampleRequirements}
+                  />
+                )}
+                {/* =========================
+                  ANIMAL FEED ADDITIVES
+              ========================== */}
+
+                {category === "Animal Feed Additives" && (
+                  <AnimalFeedAdditives
+                    brand={brand}
+                    setBrand={setBrand}
+
+                    company={company}
+                    setCompany={setCompany}
+
+                    productType={productType}
+                    setProductType={setProductType}
+
+                    size={size}
+                    setSize={setSize}
+
+                    activeIngredient={activeIngredient}
+                    setActiveIngredient={setActiveIngredient}
+
+                    activeContent={activeContent}
+                    setActiveContent={setActiveContent}
+
+                    casNumber={casNumber}
+                    setCasNumber={setCasNumber}
+
+                    chemicalFormula={chemicalFormula}
+                    setChemicalFormula={setChemicalFormula}
+
+                    targetAnimal={targetAnimal}
+                    setTargetAnimal={setTargetAnimal}
+
+                    applicationPurpose={applicationPurpose}
+                    setApplicationPurpose={setApplicationPurpose}
+
+                    inclusionRate={inclusionRate}
+                    setInclusionRate={setInclusionRate}
+
+                    physicalForm={physicalForm}
+                    setPhysicalForm={setPhysicalForm}
+
+                    countryOfOrigin={countryOfOrigin}
+                    setCountryOfOrigin={setCountryOfOrigin}
+
+                    shelfLife={shelfLife}
+                    setShelfLife={setShelfLife}
+
+                    storageConditions={storageConditions}
+                    setStorageConditions={setStorageConditions}
+
+                    specifications={specifications}
+                    setSpecifications={setSpecifications}
+                  />
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      const newCategory = e.target.value;
+
+                      setCategory(newCategory);
+
+                      // Clear category-specific fields
+                      setBrand("");
+                      setSize("");
+                      setStrength("");
+                      setCompany("");
+                      setProductType("");
+                      setKeyIngredients("");
+                      setSkinHairType("");
+                      setCountryOfOrigin("");
+                      setBenefits("");
+                      setHowToUse("");
+                      setIngredients("");
+                      setShelfLife("");
+
+                      // Clear Medicine-specific fields
+                      setGenericName("");
+                      setPharmacology("");
+                      setIndication("");
+                      setDosage("");
+                      setAdministration("");
+                      setSideEffects("");
+                      setPrecautions("");
+                      setPregnancyLactation("");
+                      setDrugInteraction("");
+                      setStorageInfo("");
+
+                      // Clear packaging fields
+                      setStripsPerBox("");
+                      setTabletsPerStrip("");
+                    }}
+                    className="w-full border p-3 rounded-lg"
+                  >
+                    <option value="">Select Category</option>
+
+                    {categories
+                      .filter((cat: any) => cat.status === true)
+                      .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                      .map((cat: any) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                  </select>
+                  <select
+                    value={unitType}
+                    onChange={(e) => setUnitType(e.target.value)}
+                    className="w-full border p-3 rounded-lg"
+                  >
+                    <option value="">Select Unit Type</option>
+
+                    {selectedCategory?.unitTypes?.map((unit: string) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  type="number"
+                  placeholder={category === "Lab-Tests" ? "Test Price" : "Price"}
+                  value={price}
+                  onChange={(e) =>
+                    setPrice(e.target.value)
+                  }
+                  className="w-full border p-3 rounded"
+                  required
+                />
+                {category !== "Lab-Tests" && (
+                  <input
+                    type="number"
+                    placeholder="Stock"
+                    value={stock}
+                    onChange={(e) =>
+                      setStock(e.target.value)
+                    }
+                    className="w-full border p-3 rounded"
+                    required
+                  />
+                )}
+                <input
+                  type="number"
+                  placeholder="Discount %"
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  className="w-full border p-3 rounded"
+                  required
+                />
+                <div className="flex items-center gap-3">
+                  <input
+                    id="featured"
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="w-5 h-5"
+                  />
+
+                  <label htmlFor="featured" className="font-medium">
+                    <label htmlFor="featured" className="font-medium">
+                      {category === "Lab-Tests" ? "⭐ Featured Test" : "⭐ Featured Product"}
+                    </label>
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  placeholder={category === "Lab-Tests" ? "Test Image URL" : "Image URL"}
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full border p-3 rounded"
+                />
+
+                {/* Main Product Image */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {category === "Lab-Tests"
+                      ? "Test / Service Image"
+                      : "Main Product Image"}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setImageFile(
+                        e.target.files?.[0] || null
+                      )
+                    }
+                    className="w-full border p-3 rounded"
+                  />
+                </div>
+
+                {/* Additional Product Images */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Additional Product Images
+                  </label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const newFiles = Array.from(e.target.files || []);
+
+                      setImageFiles((prev) => [
+                        ...prev,
+                        ...newFiles,
+                      ]);
+
+                      e.target.value = "";
+                    }}
+                    className="w-full border p-3 rounded"
+                  />
+
+                  {imageFiles.length > 0 && (
+                    <p className="text-sm text-slate-500 mt-2">
+                      {imageFiles.length} additional image
+                      {imageFiles.length > 1 ? "s" : ""} selected
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-teal-600 text-white py-3 rounded"
+              >
+                {editingId
+                  ? "Update Product"
+                  : "Add Product"}
+              </button>
+            </form>
+          )
+        }
+        <div
+          ref={productSectionRef}
+          onClick={() => setShowProducts(!showProducts)}
+          className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-5 py-4 mb-3 mt-8 flex justify-between items-center cursor-pointer"
+        >
+          <h2 className="text-xl font-bold">
+            📦 Product List
+          </h2>
+
+          <span className="text-2xl font-bold">
+            {showProducts ? "−" : "+"}
+          </span>
         </div>
-      )}
-{Number(product.stock) === 0 && (
-  <div className="bg-red-500 text-white text-center py-2 font-semibold">
-    Out of Stock
-  </div>
-)}
-      <div className="p-4">
-        <h3 className="text-xl font-bold">
-          {product.name}
-        </h3>
-        {product.strength && (
-          <p className="text-blue-600 font-semibold">
-            Strength: {product.strength}
-          </p>
-        )}
-<p>Category: {product.category}</p>
 
-{product.company && (
-  <p>Company: {product.company}</p>
-)}
-
-{product.category === "Medicine" && (
-  <>
-    <p>
-      Pack: {product.stripsPerBox} Strips / Box
-    </p>
-
-    <p>
-      Tablet: {product.tabletsPerStrip} / Strip
-    </p>
-
-  </>
-)}
-
-{product.category === "Baby & Mom Care" && (
-  <>
-    {product.size && (
-      <p className="text-blue-600 font-semibold">
-        Size: {product.size}
-      </p>
-    )}
-
-    {product.brand && (
-      <p>Brand: {product.brand}</p>
-    )}
-  </>
-)}
-
-{product.category === "Healthcare" && (
-  <>
-    {product.size && <p>Size: {product.size}</p>}
-    {product.brand && <p>Brand: {product.brand}</p>}
-  </>
-)}
-
-{product.category === "Medical Device" && (
-  <>
-    {product.model && <p>Model: {product.model}</p>}
-    {product.warranty && (
-      <p>Warranty: {product.warranty}</p>
-    )}
-  </>
-)}
-<p className="font-semibold text-teal-600">
-  Selling Unit: {product.unitType}
-</p>
-<p className="font-bold text-lg text-green-600">
-  ৳ {product.price} / {product.unitType}
-</p>
-<p
-  className={
-    Number(product.stock) === 0
-      ? "text-red-600 font-bold"
-      : Number(product.stock) <= 10
-      ? "text-orange-500 font-bold"
-      : "text-green-600"
-  }
->
-  Stock: {product.stock}
-</p>
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={() => editProduct(product)}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Edit
-          </button>
-
-          <button
-            onClick={() => deleteProduct(product.id)}
-            className="bg-red-500 text-white px-4 py-2 rounded"
-          >
-            Delete
-          </button>
-        </div>
+        {
+          showProducts && (
+            <>
+              <ProductList
+                filteredProducts={filteredProducts}
+                lowStockProducts={lowStockProducts}
+                searchProduct={searchProduct}
+                setSearchProduct={setSearchProduct}
+                selectedProducts={selectedProducts}
+                toggleProductSelection={toggleProductSelection}
+                deleteSelectedProducts={deleteSelectedProducts}
+                editProduct={editProduct}
+                deleteProduct={deleteProduct}
+              />
+            </>
+          )}
       </div>
-    </div>
-  ))}
-</div>
-
-</>
-
-)}
-
-</div>
+    </div >
   );
 }

@@ -20,3 +20,34 @@ body {
 button {
   cursor: pointer;
 }
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .invoice-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  button {
+    display: none !important;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}

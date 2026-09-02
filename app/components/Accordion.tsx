@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type AccordionProps = {
-  title: string;
+title: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
 };

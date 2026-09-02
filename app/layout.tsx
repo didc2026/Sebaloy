@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import LayoutWrapper from "./components/LayoutWrapper";
+import { SearchProvider } from "./context/SearchContext";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -77,11 +78,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-<CartProvider>
-  <LayoutWrapper>
-    {children}
-  </LayoutWrapper>
-</CartProvider>      </body>
+        <CartProvider>
+          <SearchProvider>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </SearchProvider>
+        </CartProvider> </body>
     </html>
   );
 }

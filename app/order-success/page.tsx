@@ -6,64 +6,111 @@ import Link from "next/link";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
+
   const orderId = searchParams.get("id");
+  const orderNumber = searchParams.get("orderNumber");
 
   return (
-    <div className="max-w-xl mx-auto py-20 px-4 text-center">
-      <h1 className="text-3xl font-bold text-green-600">
-        ✅ Order Placed Successfully
-      </h1>
+    <main className="max-w-2xl mx-auto px-4 py-12">
 
-      <p className="mt-4 text-gray-600">
-        Thank you for shopping with Sebaloy.
-      </p>
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center">
 
-      <div className="mt-6 border rounded-lg p-4">
-        <p className="text-sm text-gray-500">
-          Order ID
+        <div className="text-6xl mb-4">
+          ✅
+        </div>
+
+        <h1 className="text-3xl font-bold text-green-600">
+          Order Placed Successfully
+        </h1>
+
+        <p className="text-gray-500 mt-3">
+          Thank you for shopping with Sebaloy.
         </p>
 
-        <div className="flex items-center justify-center gap-3">
-          <p className="font-mono break-all">
-            {orderId}
+        {/* Order Number */}
+
+        <div className="mt-8 rounded-xl border bg-gray-50 p-5">
+
+          <p className="text-sm text-gray-500">
+            Order Number
           </p>
 
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(orderId || "");
-              alert("Order ID Copied!");
-            }}
-            className="text-xs text-gray-400 hover:text-teal-600"
-          >
-            Copy Now
-          </button>
+          <div className="flex items-center justify-center gap-3 mt-2">
+
+            <p className="font-mono text-xl font-bold text-teal-600">
+              {orderNumber}
+            </p>
+            <Link
+              href={`/invoice/${orderId}`}
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700"
+            >
+              View Invoice
+            </Link>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(orderNumber || "");
+                alert("Order Number Copied!");
+              }}
+              className="text-sm text-teal-600 hover:underline"
+            >
+              Copy
+            </button>
+
+          </div>
+
         </div>
+
+        {/* Status */}
+
+        <div className="mt-8">
+
+          <span className="inline-flex items-center rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-800">
+            🟡 Pending
+          </span>
+
+        </div>
+
+        {/* Buttons */}
+
+        <div className="mt-10 flex flex-col gap-4">
+
+          <Link
+            href="/"
+            className="w-full rounded-xl bg-teal-600 py-3 text-white font-semibold hover:bg-teal-700 transition"
+          >
+            Continue Shopping
+          </Link>
+
+          <Link
+            href={`/order-track?orderNumber=${orderNumber}`}
+            className="w-full rounded-xl border border-teal-600 py-3 text-teal-600 font-semibold hover:bg-teal-50 transition"
+          >
+            Track Your Order
+          </Link>
+          <Link
+            href={`/invoice/${orderId}`}
+            target="_blank"
+            className="block w-full rounded-xl border border-blue-600 py-3 text-center text-blue-600 hover:bg-blue-50 transition"
+          >
+            Download Invoice
+          </Link>
+        </div>
+
       </div>
 
-      <div className="mt-6">
-        <Link
-          href="/"
-          className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700"
-        >
-          Continue Shopping
-        </Link>
-      </div>
-
-      <div className="mt-4">
-        <Link
-          href={`/order-track?id=${orderId}`}
-          className="inline-block border border-teal-600 text-teal-600 px-6 py-3 rounded-lg hover:bg-teal-50"
-        >
-          Track Your Order
-        </Link>
-      </div>
-    </div>
+    </main>
   );
 }
 
 export default function OrderSuccessPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="py-20 text-center">
+          Loading...
+        </div>
+      }
+    >
       <OrderSuccessContent />
     </Suspense>
   );
