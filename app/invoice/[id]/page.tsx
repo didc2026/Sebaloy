@@ -27,6 +27,15 @@ type Order = {
     deliveryZone: string;
     status: string;
     createdAt: any;
+
+    // Dynamic payment information
+    paymentMethod?: "cod" | "bkash" | "nagad" | "bank" | string;
+    paymentStatus?: "pending" | "paid" | "failed" | string;
+    paymentNumber?: string;
+    transactionId?: string;
+    bankName?: string;
+    accountName?: string;
+    bankReference?: string;
 };
 
 const numberToWords = (num: number): string => {
@@ -113,6 +122,35 @@ export default function InvoicePage() {
         fetchOrder();
     }, [id]);
 
+    const paymentMethodLabel = (method?: string) => {
+        switch (method) {
+            case "cod":
+                return "Cash on Delivery";
+            case "bkash":
+                return "bKash";
+            case "nagad":
+                return "Nagad";
+            case "bank":
+                return "Bank Transfer";
+            default:
+                return method || "Not specified";
+        }
+    };
+
+    const paymentStatusLabel = (status?: string) => {
+        switch (status) {
+            case "paid":
+                return "Paid";
+            case "failed":
+                return "Failed";
+            case "pending":
+                return "Pending";
+            default:
+                return status || "Pending";
+        }
+    };
+
+
     const downloadInvoice = async () => {
         if (!invoiceRef.current || !order) return;
 
@@ -168,6 +206,22 @@ export default function InvoicePage() {
         );
     }
 
+    // Always derive invoice totals from the line items so the invoice
+    // remains dynamic and consistent with the checkout calculation.
+    const originalPriceTotal = order.items.reduce(
+        (sum, item) => sum + Math.round(item.price) * item.quantity,
+        0
+    );
+
+    const subtotal = order.items.reduce(
+        (sum, item) => sum + Math.round(item.salePrice) * item.quantity,
+        0
+    );
+
+    const discountTotal = originalPriceTotal - subtotal;
+    const deliveryCharge = Math.round(order.deliveryCharge || 0);
+    const grandTotal = subtotal + deliveryCharge;
+
     return (
         <>
             {/* 
@@ -222,9 +276,9 @@ export default function InvoicePage() {
                     className="invoice-card bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200"
                 >
                     {/* Invoice header */}
-                    <div className="bg-gradient-to-r from-sky-700 via-cyan-600 to-teal-500 px-5 sm:px-8 py-3 sm:py-4 text-white">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4">
-                            <div className="bg-white rounded-xl px-3 py-1.5">
+                    <div className="bg-white px-5 sm:px-8 py-6 border-b border-slate-300">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div className="px-1 py-1">
                                 <Image
                                     src="/logo/sebaloy-logo.png"
                                     alt="Sebaloy"
@@ -235,21 +289,23 @@ export default function InvoicePage() {
                             </div>
 
                             <div className="w-full md:w-auto md:text-right">
-                                <p className="text-xs sm:text-sm uppercase tracking-[0.25em] font-semibold opacity-90">
+                                <p className="text-xs sm:text-sm uppercase tracking-[0.25em] font-semibold text-slate-500">
                                     Healthcare Marketplace
                                 </p>
-                                <h2 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-wide">
+                                <h2 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-wide text-slate-800">
                                     TAX INVOICE
                                 </h2>
                                 <div className="mt-3 flex flex-wrap md:justify-end gap-2">
-                                    <span className="rounded-md bg-white/15 px-3 py-1 text-sm">
+                                    <span className="rounded-md border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700">
                                         Order No: {order.orderNumber}
                                     </span>
                                     <span
                                         className={`rounded-md px-3 py-1 text-sm font-bold ${
                                             order.status === "pending"
-                                                ? "bg-yellow-200 text-yellow-900"
-                                                : "bg-white text-emerald-800"
+                                                ? "bg-yellow-100 text-yellow-800"
+                                                : order.status === "cancelled"
+                                                    ? "bg-red-100 text-red-700"
+                                                    : "bg-green-100 text-green-700"
                                         }`}
                                     >
                                         {order.status.toUpperCase()}
@@ -306,8 +362,33 @@ export default function InvoicePage() {
                                             {order.deliveryZone}
                                         </span>
                                     </div>
+                                    {order.paymentMethod && (
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Payment Method</span>
+                                            <span className="font-semibold text-slate-800 text-right">
+                                                {paymentMethodLabel(order.paymentMethod)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {order.paymentStatus && (
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Payment Status</span>
+                                            <span className="font-semibold text-slate-800">
+                                                {paymentStatusLabel(order.paymentStatus)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {order.transactionId && (
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Transaction ID</span>
+                                            <span className="font-semibold text-slate-800 text-right break-all">
+                                                {order.transactionId}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+
                         </div>
 
                         {/* Product details */}
@@ -332,7 +413,7 @@ export default function InvoicePage() {
                                         <col className="w-[19%]" />
                                     </colgroup>
 
-                                    <thead className="bg-teal-700 text-white">
+                                    <thead className="bg-slate-700 text-white">
                                         <tr>
                                             <th className="p-2.5 sm:p-3 text-center font-semibold">#</th>
                                             <th className="p-2.5 sm:p-3 text-left font-semibold">Product</th>
@@ -365,9 +446,7 @@ export default function InvoicePage() {
                                                     {item.discount}%
                                                 </td>
                                                 <td className="p-2.5 sm:p-3 text-right whitespace-nowrap font-semibold text-slate-800">
-                                                    ৳{Math.round(
-                                                        item.salePrice * item.quantity
-                                                    ).toLocaleString()}
+                                                    ৳{(Math.round(item.salePrice) * item.quantity).toLocaleString()}
                                                 </td>
                                             </tr>
                                         ))}
@@ -378,32 +457,39 @@ export default function InvoicePage() {
 
                         {/* Summary */}
                         <div className="mt-7 flex justify-end">
-                            <div className="w-full md:w-[430px] overflow-hidden rounded-xl border border-slate-200">
+                            <div className="w-full md:w-[430px] overflow-hidden border border-slate-200">
                                 <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 sm:px-5 py-3">
-                                    <span className="font-medium text-slate-600">Subtotal</span>
+                                    <span className="font-medium text-slate-600">Original Price</span>
                                     <span className="font-semibold text-slate-800">
-                                        ৳{Math.round(order.subtotal).toLocaleString()}
+                                        ৳{originalPriceTotal.toLocaleString()}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center justify-between border-b border-slate-200 px-4 sm:px-5 py-3">
                                     <span className="font-medium text-slate-600">Discount</span>
                                     <span className="font-semibold text-red-600">
-                                        - ৳{Math.round(order.discountAmount).toLocaleString()}
+                                        - ৳{discountTotal.toLocaleString()}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center justify-between border-b border-slate-200 px-4 sm:px-5 py-3">
+                                    <span className="font-medium text-slate-600">Subtotal</span>
+                                    <span className="font-semibold text-slate-800">
+                                        ৳{subtotal.toLocaleString()}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 sm:px-5 py-3">
                                     <span className="font-medium text-slate-600">Delivery Charge</span>
                                     <span className="font-semibold text-slate-800">
-                                        ৳{Math.round(order.deliveryCharge).toLocaleString()}
+                                        ৳{deliveryCharge.toLocaleString()}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-teal-700 px-4 sm:px-5 py-4 text-white">
+                                <div className="flex items-center justify-between bg-sky-600 px-4 sm:px-5 py-4 text-white">
                                     <span className="text-base sm:text-lg font-bold">Grand Total</span>
                                     <span className="text-xl sm:text-2xl font-extrabold">
-                                        ৳{Math.round(order.total).toLocaleString()}
+                                        ৳{grandTotal.toLocaleString()}
                                     </span>
                                 </div>
                             </div>
@@ -411,20 +497,22 @@ export default function InvoicePage() {
 
                         {/* Amount in words */}
                         <div className="mt-5 rounded-xl border border-teal-100 bg-teal-50 px-4 sm:px-5 py-3">
-                            <p className="text-sm text-slate-700 whitespace-nowrap overflow-x-auto">
+                            <p className="text-xs sm:text-sm text-slate-700 whitespace-nowrap overflow-hidden">
                                 <span className="font-bold text-teal-800">Amount in Words:</span>{" "}
-                                {numberToWords(order.total)} Taka Only
+                                <span className="text-[11px] sm:text-sm">
+                                    {numberToWords(grandTotal)} Taka Only
+                                </span>
                             </p>
                         </div>
 
                         {/* Signatures */}
-                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div className="pt-8">
+                        <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                            <div className="pt-6 sm:pt-7">
                                 <div className="border-t border-slate-400 pt-2 text-center text-sm text-slate-600">
                                     Customer Signature
                                 </div>
                             </div>
-                            <div className="pt-8">
+                            <div className="pt-6 sm:pt-7">
                                 <div className="border-t border-slate-400 pt-2 text-center text-sm text-slate-600">
                                     Authorized Signature
                                 </div>

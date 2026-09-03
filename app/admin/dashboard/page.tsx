@@ -546,6 +546,7 @@ export default function Dashboard() {
     setWhenRecommended("");
     setClinicalSignificance("");
     setSampleRequirements("");
+    setPreparation("");
     // =========================
     // Clear Animal Feed fields
     // =========================
@@ -593,8 +594,9 @@ export default function Dashboard() {
     try {
       // Prevent duplicate product/test creation
       if (!editingId) {
-        const normalizedName = name.trim().toLowerCase();
         const normalizedCategory = category.trim().toLowerCase();
+        const normalizedTestName = testName.trim().toLowerCase();
+        const normalizedName = name.trim().toLowerCase();
 
         const existingProductsSnapshot = await getDocs(
           collection(db, "products")
@@ -603,19 +605,25 @@ export default function Dashboard() {
         const duplicateExists = existingProductsSnapshot.docs.some(
           (item) => {
             const data = item.data();
+            const existingCategory =
+              data.category?.trim().toLowerCase() || "";
+
+            if (isLabTest) {
+              return (
+                existingCategory === normalizedCategory &&
+                data.testName?.trim().toLowerCase() === normalizedTestName
+              );
+            }
 
             return (
-              data.name?.trim().toLowerCase() === normalizedName &&
-              data.category?.trim().toLowerCase() === normalizedCategory
+              existingCategory === normalizedCategory &&
+              data.name?.trim().toLowerCase() === normalizedName
             );
           }
         );
 
         if (duplicateExists) {
-          alert(
-            `This ${category === "Lab-Tests" ? "test" : "product"
-            } already exists!`
-          );
+          alert(`This ${isLabTest ? "test" : "product"} already exists!`);
           return;
         }
       }
@@ -714,6 +722,8 @@ export default function Dashboard() {
           pregnancyLactation,
           drugInteraction,
           storageInfo,
+          model,
+          warranty,
           activeIngredient,
           activeContent,
           casNumber,
@@ -778,6 +788,7 @@ export default function Dashboard() {
           whenRecommended,
           clinicalSignificance,
           sampleRequirements,
+          preparation,
         };
 
         if (currentImageUrl) {
@@ -890,6 +901,7 @@ export default function Dashboard() {
             whenRecommended,
             clinicalSignificance,
             sampleRequirements,
+            preparation,
             createdAt: Timestamp.fromDate(new Date()),
 
           }
@@ -1028,6 +1040,7 @@ export default function Dashboard() {
     setSampleRequirements(
       product.sampleRequirements || ""
     );
+    setPreparation(product.preparation || "");
     setIndication(product.indication || "");
     setDosage(product.dosage || "");
     setAdministration(product.administration || "");
@@ -1511,7 +1524,7 @@ export default function Dashboard() {
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Product Name - Hidden for Lab Tests */}
-                {category !== "Lab-Tests" && (
+                {!isLabTestCategory && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Product Name
@@ -1563,38 +1576,6 @@ export default function Dashboard() {
                     setTabletsPerStrip={setTabletsPerStrip}
                   />
                 )}
-                {category === "Lab Test" && (
-                  <div className="lg:col-span-2">
-                    <h3 className="text-xl font-bold mt-8 mb-4 border-b pb-2">
-                      Test Information
-                    </h3>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Test Type
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Molecular Test, Blood Test"
-                          className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Sample Type
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Blood, Serum, Urine"
-                          className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {category === "Baby & Mom Care" && (
                   <BabyMomFields
                     brand={brand}
@@ -1898,6 +1879,7 @@ export default function Dashboard() {
                       setHowToUse("");
                       setIngredients("");
                       setShelfLife("");
+                      setPreparation("");
 
                       // Clear Medicine-specific fields
                       setGenericName("");
@@ -1944,7 +1926,7 @@ export default function Dashboard() {
                 </div>
                 <input
                   type="number"
-                  placeholder={category === "Lab-Tests" ? "Test Price" : "Price"}
+                  placeholder={isLabTestCategory ? "Test Price" : "Price"}
                   value={price}
                   onChange={(e) =>
                     setPrice(e.target.value)
@@ -1952,7 +1934,7 @@ export default function Dashboard() {
                   className="w-full border p-3 rounded"
                   required
                 />
-                {category !== "Lab-Tests" && (
+                {!isLabTestCategory && (
                   <input
                     type="number"
                     placeholder="Stock"
@@ -1989,7 +1971,7 @@ export default function Dashboard() {
                 </div>
                 <input
                   type="text"
-                  placeholder={category === "Lab-Tests" ? "Test Image URL" : "Image URL"}
+                  placeholder={isLabTestCategory ? "Test Image URL" : "Image URL"}
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   className="w-full border p-3 rounded"
@@ -1998,7 +1980,7 @@ export default function Dashboard() {
                 {/* Main Product Image */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    {category === "Lab-Tests"
+                    {isLabTestCategory
                       ? "Test / Service Image"
                       : "Main Product Image"}
                   </label>

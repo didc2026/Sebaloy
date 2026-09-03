@@ -136,12 +136,14 @@ export default function ForgotPasswordPage() {
           auth,
           "recaptcha-container",
           {
-            size: "normal",
+            size: "invisible",
             callback: () => {
-              // reCAPTCHA solved
+              // Invisible reCAPTCHA solved
             },
             "expired-callback": () => {
-              setError("reCAPTCHA expired. Please verify again.");
+              setError(
+                "reCAPTCHA expired. Please verify again."
+              );
             },
           }
         );
@@ -495,11 +497,11 @@ export default function ForgotPasswordPage() {
                     </p>
                   </div>
 
-                  {/* reCAPTCHA */}
+                  {/* Invisible reCAPTCHA */}
                   {!otpSent && (
                     <div
                       id="recaptcha-container"
-                      className="flex justify-center"
+                      className="hidden"
                     />
                   )}
 

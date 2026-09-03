@@ -13,15 +13,28 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
+type PaymentMethod = "cod" | "bkash" | "nagad" | "bank";
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, clearCart } = useCart();
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [deliveryZone, setDeliveryZone] =
-    useState("dhaka");
+  const [deliveryZone, setDeliveryZone] = useState("dhaka");
+
+  // Dynamic payment fields
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("cod");
+  const [paymentNumber, setPaymentNumber] = useState("");
+  const [transactionId, setTransactionId] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [bankReference, setBankReference] = useState("");
+
   const [loading, setLoading] = useState(false);
+
   const originalTotal = cartItems.reduce(
     (sum, item) =>
       sum + Math.round(item.price) * item.quantity,
@@ -36,7 +49,8 @@ export default function CheckoutPage() {
         (item.price * discount) / 100
       );
 
-      const salePrice = Math.round(item.price) - discountPerUnit;
+      const salePrice =
+        Math.round(item.price) - discountPerUnit;
 
       return sum + salePrice * item.quantity;
     },
@@ -58,6 +72,18 @@ export default function CheckoutPage() {
         : 120;
 
   const grandTotal = subtotal + deliveryCharge;
+
+  function handlePaymentMethodChange(method: PaymentMethod) {
+    setPaymentMethod(method);
+
+    // Clear method-specific fields when switching payment method.
+    setPaymentNumber("");
+    setTransactionId("");
+    setBankName("");
+    setAccountName("");
+    setBankReference("");
+  }
+
   const placeOrder = async () => {
     const user = auth.currentUser;
 
@@ -65,6 +91,7 @@ export default function CheckoutPage() {
       alert("Please login first");
       return;
     }
+
     if (loading) return;
 
     setLoading(true);
@@ -79,10 +106,35 @@ export default function CheckoutPage() {
 
     if (!bdPhoneRegex.test(phone.trim())) {
       alert("সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন।");
-
       setLoading(false);
       return;
     }
+
+    // Validate dynamic payment information.
+    if (paymentMethod === "bkash" || paymentMethod === "nagad") {
+      const paymentNumberRegex = /^01[3-9]\d{8}$/;
+
+      if (!paymentNumberRegex.test(paymentNumber.trim())) {
+        alert("সঠিক ১১ সংখ্যার বাংলাদেশি পেমেন্ট নম্বর দিন।");
+        setLoading(false);
+        return;
+      }
+
+      if (!transactionId.trim()) {
+        alert("Transaction ID দিন।");
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (paymentMethod === "bank") {
+      if (!bankName.trim() || !accountName.trim() || !bankReference.trim()) {
+        alert("Bank Name, Account Name এবং Reference পূরণ করুন।");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       console.log({
         name,
@@ -93,30 +145,41 @@ export default function CheckoutPage() {
         grandTotal,
         deliveryCharge,
         deliveryZone,
+        paymentMethod,
+        paymentNumber,
+        transactionId,
+        bankName,
+        accountName,
+        bankReference,
       });
+
       const counterRef = doc(db, "system", "orderCounter");
 
-      const orderNumber = await runTransaction(db, async (transaction) => {
-        const counterSnap = await transaction.get(counterRef);
+      const orderNumber = await runTransaction(
+        db,
+        async (transaction) => {
+          const counterSnap = await transaction.get(counterRef);
 
-        let lastNumber = 0;
+          let lastNumber = 0;
 
-        if (counterSnap.exists()) {
-          lastNumber = counterSnap.data().lastNumber || 0;
+          if (counterSnap.exists()) {
+            lastNumber =
+              counterSnap.data().lastNumber || 0;
+          }
+
+          const newNumber = lastNumber + 1;
+
+          transaction.set(
+            counterRef,
+            {
+              lastNumber: newNumber,
+            },
+            { merge: true }
+          );
+
+          return `SBL-${String(newNumber).padStart(6, "0")}`;
         }
-
-        const newNumber = lastNumber + 1;
-
-        transaction.set(
-          counterRef,
-          {
-            lastNumber: newNumber,
-          },
-          { merge: true }
-        );
-
-        return `SBL-${String(newNumber).padStart(6, "0")}`;
-      });
+      );
 
       const orderRef = await addDoc(collection(db, "orders"), {
         orderNumber,
@@ -126,57 +189,89 @@ export default function CheckoutPage() {
         phone,
         address,
 
-        items: cartItems.map((item) => ({
-          id: item.id,
-          name: item.name,
+        items: cartItems.map((item) => {
+          const discount = item.discount || 0;
 
-          // Original Price
-          price: item.price,
+          const discountPerUnit = Math.round(
+            (item.price * discount) / 100
+          );
 
-          // Discount %
-          discount: item.discount || 0,
+          const salePrice =
+            Math.round(item.price) - discountPerUnit;
 
-          // Selling Price - পূর্ণ সংখ্যা
-          salePrice:
-            Math.round(item.price) -
-            Math.round(
-              (item.price * (item.discount || 0)) / 100
-            ),
-          quantity: item.quantity,
-        })),
-        subtotal: subtotal,
+          return {
+            id: item.id,
+            name: item.name,
 
+            // Original Price
+            price: Math.round(item.price),
+
+            // Discount %
+            discount,
+
+            // Selling Price - whole number
+            salePrice,
+
+            quantity: item.quantity,
+          };
+        }),
+
+        subtotal,
         discountAmount,
-
         deliveryCharge,
-
         total: grandTotal,
         deliveryZone,
 
-        status: "pending",
+        // Dynamic payment information
+        paymentMethod,
+        paymentStatus:
+          paymentMethod === "cod" ? "pending" : "pending",
 
+        ...(paymentMethod === "bkash" || paymentMethod === "nagad"
+          ? {
+              paymentNumber: paymentNumber.trim(),
+              transactionId: transactionId.trim(),
+            }
+          : {}),
+
+        ...(paymentMethod === "bank"
+          ? {
+              bankName: bankName.trim(),
+              accountName: accountName.trim(),
+              bankReference: bankReference.trim(),
+            }
+          : {}),
+
+        status: "pending",
         createdAt: new Date(),
-      }); clearCart();
+      });
+
+      clearCart();
+
       for (const item of cartItems) {
         const productRef = doc(db, "products", item.id);
 
         const productSnap = await getDoc(productRef);
+
         if (productSnap.exists()) {
           const currentStock =
             Number(productSnap.data().stock) || 0;
 
           await updateDoc(productRef, {
-            stock: currentStock - (item.quantity || 1),
+            stock:
+              currentStock - (item.quantity || 1),
           });
         }
       }
+
       localStorage.removeItem("cart");
 
       setLoading(false);
 
       router.push(
         `/order-success?id=${orderRef.id}&orderNumber=${orderNumber}`
-      ); return;
+      );
+      return;
     } catch (error) {
       console.error(error);
       alert("অর্ডার সেভ হয়নি");
@@ -200,7 +295,6 @@ export default function CheckoutPage() {
         </h2>
 
         <div className="space-y-4">
-
           <div>
             <label className="block text-sm font-medium mb-1">
               Full Name
@@ -250,24 +344,235 @@ export default function CheckoutPage() {
 
             <select
               value={deliveryZone}
-              onChange={(e) => setDeliveryZone(e.target.value)}
+              onChange={(e) =>
+                setDeliveryZone(e.target.value)
+              }
               className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-teal-500 outline-none"
             >
               <option value="dhaka">Dhaka City</option>
               <option value="outside">Outside Dhaka</option>
             </select>
           </div>
-
         </div>
-
       </div>
+
+      {/* Payment Method */}
+      <div className="max-w-3xl mx-auto mt-5 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+        <h2 className="text-lg font-bold text-slate-800 mb-3">
+          Payment Method
+        </h2>
+
+        <div className="space-y-3">
+          <label
+            className={`block cursor-pointer rounded-xl border p-4 transition ${
+              paymentMethod === "cod"
+                ? "border-teal-500 bg-teal-50"
+                : "border-gray-200 hover:border-teal-300"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="cod"
+                checked={paymentMethod === "cod"}
+                onChange={() =>
+                  handlePaymentMethodChange("cod")
+                }
+                className="mt-1"
+              />
+              <div>
+                <p className="font-semibold text-slate-800">
+                  Cash on Delivery
+                </p>
+                <p className="text-sm text-gray-500">
+                  Pay when your order is delivered.
+                </p>
+              </div>
+            </div>
+          </label>
+
+          <label
+            className={`block cursor-pointer rounded-xl border p-4 transition ${
+              paymentMethod === "bkash"
+                ? "border-pink-500 bg-pink-50"
+                : "border-gray-200 hover:border-pink-300"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="bkash"
+                checked={paymentMethod === "bkash"}
+                onChange={() =>
+                  handlePaymentMethodChange("bkash")
+                }
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800">
+                  bKash
+                </p>
+                <p className="text-sm text-gray-500">
+                  Mobile payment.
+                </p>
+              </div>
+            </div>
+
+            {paymentMethod === "bkash" && (
+              <div className="mt-4 space-y-3">
+                <input
+                  type="text"
+                  placeholder="bKash Number (01XXXXXXXXX)"
+                  value={paymentNumber}
+                  onChange={(e) =>
+                    setPaymentNumber(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-pink-500 outline-none"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Transaction ID"
+                  value={transactionId}
+                  onChange={(e) =>
+                    setTransactionId(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-pink-500 outline-none"
+                />
+              </div>
+            )}
+          </label>
+
+          <label
+            className={`block cursor-pointer rounded-xl border p-4 transition ${
+              paymentMethod === "nagad"
+                ? "border-orange-500 bg-orange-50"
+                : "border-gray-200 hover:border-orange-300"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="nagad"
+                checked={paymentMethod === "nagad"}
+                onChange={() =>
+                  handlePaymentMethodChange("nagad")
+                }
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800">
+                  Nagad
+                </p>
+                <p className="text-sm text-gray-500">
+                  Mobile payment.
+                </p>
+              </div>
+            </div>
+
+            {paymentMethod === "nagad" && (
+              <div className="mt-4 space-y-3">
+                <input
+                  type="text"
+                  placeholder="Nagad Number (01XXXXXXXXX)"
+                  value={paymentNumber}
+                  onChange={(e) =>
+                    setPaymentNumber(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Transaction ID"
+                  value={transactionId}
+                  onChange={(e) =>
+                    setTransactionId(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+              </div>
+            )}
+          </label>
+
+          <label
+            className={`block cursor-pointer rounded-xl border p-4 transition ${
+              paymentMethod === "bank"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-blue-300"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="bank"
+                checked={paymentMethod === "bank"}
+                onChange={() =>
+                  handlePaymentMethodChange("bank")
+                }
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-slate-800">
+                  Bank Transfer
+                </p>
+                <p className="text-sm text-gray-500">
+                  Pay by bank transfer.
+                </p>
+              </div>
+            </div>
+
+            {paymentMethod === "bank" && (
+              <div className="mt-4 space-y-3">
+                <input
+                  type="text"
+                  placeholder="Bank Name"
+                  value={bankName}
+                  onChange={(e) =>
+                    setBankName(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Account Name"
+                  value={accountName}
+                  onChange={(e) =>
+                    setAccountName(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Transaction / Reference Number"
+                  value={bankReference}
+                  onChange={(e) =>
+                    setBankReference(e.target.value)
+                  }
+                  className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            )}
+          </label>
+        </div>
+      </div>
+
+      {/* Order Summary */}
       <div className="max-w-3xl mx-auto mt-5 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
         <h2 className="text-lg font-bold mb-3">
           Order Summary
         </h2>
+
         <p className="text-gray-600 mb-3">
           Total Items: {totalItems}
         </p>
+
         <p className="mt-3 mb-2 font-semibold text-gray-700">
           Items
         </p>
@@ -287,6 +592,7 @@ export default function CheckoutPage() {
               <span>৳ {Math.round(originalTotal)}</span>
             </div>
           )}
+
           {discountAmount > 0 && (
             <>
               <div className="flex justify-between text-red-600 font-medium">
@@ -297,6 +603,7 @@ export default function CheckoutPage() {
               <hr className="my-2 border-gray-300" />
             </>
           )}
+
           <div className="flex justify-between">
             <span>Subtotal</span>
             <span>৳ {Math.round(subtotal)}</span>
@@ -313,16 +620,19 @@ export default function CheckoutPage() {
             <span>Grand Total</span>
             <span>৳ {Math.round(grandTotal)}</span>
           </div>
+
           <button
             onClick={placeOrder}
             disabled={loading}
-            className={`w-full mt-4 py-3 rounded-xl text-white font-semibold transition
-    ${loading
+            className={`w-full mt-4 py-3 rounded-xl text-white font-semibold transition ${
+              loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-teal-600 hover:bg-teal-700"
-              }`}
+            }`}
           >
-            {loading ? "Processing Order..." : "Place Order"}
+            {loading
+              ? "Processing Order..."
+              : "Place Order"}
           </button>
         </div>
       </div>

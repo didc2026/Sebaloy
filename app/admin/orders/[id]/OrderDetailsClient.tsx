@@ -229,11 +229,9 @@ export default function OrderDetailsClient({ orderId }: Props) {
                                 <strong>Total:</strong>{" "}
                                 ৳
                                 {Math.round(
-                                    (
-                                        item.price -
-                                        (item.price * (item.discount || 0)) / 100
-                                    ) * item.quantity
-                                )}
+                                    item.price -
+                                    (item.price * (item.discount || 0)) / 100
+                                ) * item.quantity}
                             </p>
 
                         </div>
