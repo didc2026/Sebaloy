@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCart } from "@/app/context/CartContext";
 
 type Product = {
     id: string;
@@ -43,7 +42,31 @@ export default function ProductCardPage({
     products,
 }: ProductCardPageProps) {
     const router = useRouter();
-    const { addToCart } = useCart();
+
+    /*
+     * IMPORTANT:
+     * Product Card থেকে আর সরাসরি Cart/Checkout হবে না।
+     *
+     * Add to Cart / Buy Now
+     * → Product Details Page
+     *
+     * Product Details Page
+     * → Strip / Box / Vial নির্বাচন
+     * → Add to Cart
+     *
+     * তারপর Shopping Cart থেকে Checkout।
+     */
+
+    const goToProductDetails = (
+        productId: string,
+        e?: React.MouseEvent
+    ) => {
+        if (e) {
+            e.stopPropagation();
+        }
+
+        router.push(`/product/${productId}`);
+    };
 
     return (
         <div
@@ -61,18 +84,20 @@ export default function ProductCardPage({
             {products.map((product) => {
                 const finalPrice = Math.round(
                     product.price -
-                        (product.price * (product.discount || 0)) / 100
+                        (product.price *
+                            (product.discount || 0)) /
+                            100
                 );
 
-                const isOutOfStock = Number(product.stock) === 0;
+                const isOutOfStock =
+                    Number(product.stock) === 0;
 
                 return (
                     <div
                         key={product.id}
-                        onClick={() => {
-                            console.log("CLICKED PRODUCT =", product);
-                            router.push(`/product/${product.id}`);
-                        }}
+                        onClick={() =>
+                            goToProductDetails(product.id)
+                        }
                         className="
                             group
                             bg-white
@@ -97,21 +122,22 @@ export default function ProductCardPage({
                             max-md:hover:shadow-md
                         "
                     >
-
-                        {/* ==================================================
+                        {/* ================================
                             PRODUCT IMAGE
-                        ================================================== */}
+                        ================================= */}
                         <div
                             className="
                                 relative
                                 h-40
-                                bg-gradient-to-b from-white to-slate-50/70
+                                bg-gradient-to-b
+                                from-white
+                                to-slate-50/70
                                 p-3
                                 flex
                                 items-center
                                 justify-center
 
-                                max-md:h-40
+                                max-md:h-36
                                 max-md:p-2.5
                             "
                         >
@@ -131,12 +157,13 @@ export default function ProductCardPage({
                                             group-hover:scale-105
 
                                             max-md:max-w-[92%]
-                                            max-md:max-h-[122px]
+                                            max-md:max-h-[112px]
                                         "
                                     />
 
                                     {/* DISCOUNT BADGE */}
-                                    {(product.discount ?? 0) > 0 && (
+                                    {(product.discount ?? 0) >
+                                        0 && (
                                         <div
                                             className="
                                                 absolute
@@ -154,8 +181,6 @@ export default function ProductCardPage({
                                                 max-md:top-2
                                                 max-md:left-2
                                                 max-md:text-[10px]
-                                                max-md:px-2
-                                                max-md:py-1
                                             "
                                         >
                                             {product.discount}% OFF
@@ -181,15 +206,13 @@ export default function ProductCardPage({
                                                 max-md:top-2
                                                 max-md:right-2
                                                 max-md:text-[10px]
-                                                max-md:px-2
-                                                max-md:py-1
                                             "
                                         >
                                             ⭐ Featured
                                         </div>
                                     )}
 
-                                    {/* PRODUCT SPECIFICATION OVERLAY */}
+                                    {/* PRODUCT SPECIFICATION */}
                                     <div
                                         className="
                                             absolute
@@ -206,73 +229,92 @@ export default function ProductCardPage({
                                             max-md:left-2
                                             max-md:px-2
                                             max-md:py-1.5
-                                            max-md:rounded-lg
                                         "
                                     >
-                                        {product.category === "Medicine" && (
-                                            <div className="mt-0.5">
-
+                                        {product.category ===
+                                            "Medicine" && (
+                                            <div>
                                                 {product.strength && (
-                                                    <p className="
-                                                        text-sm
-                                                        font-bold
-                                                        text-slate-800
-
-                                                        max-md:text-[12px]
-                                                    ">
-                                                        {product.strength}
+                                                    <p
+                                                        className="
+                                                            text-sm
+                                                            font-bold
+                                                            text-slate-800
+                                                            max-md:text-[12px]
+                                                        "
+                                                    >
+                                                        {
+                                                            product.strength
+                                                        }
                                                     </p>
                                                 )}
 
                                                 {product.size && (
-                                                    <p className="
-                                                        text-xs
-                                                        text-slate-500
-
-                                                        max-md:text-[10px]
-                                                    ">
-                                                        {product.size}{" "}
-                                                        {product.unitType || "Bottle"}
+                                                    <p
+                                                        className="
+                                                            text-xs
+                                                            text-slate-500
+                                                            max-md:text-[10px]
+                                                        "
+                                                    >
+                                                        {
+                                                            product.size
+                                                        }{" "}
+                                                        {product.unitType ||
+                                                            "Bottle"}
                                                     </p>
                                                 )}
 
-                                                {product.unitType !== "Bottle" &&
+                                                {product.unitType !==
+                                                    "Bottle" &&
                                                     product.stripsPerBox &&
                                                     product.tabletsPerStrip && (
-                                                        <p className="
-                                                            text-xs
-                                                            text-slate-500
-
-                                                            max-md:text-[10px]
-                                                        ">
-                                                            {product.stripsPerBox} ×{" "}
-                                                            {product.tabletsPerStrip} Strip
+                                                        <p
+                                                            className="
+                                                                text-xs
+                                                                text-slate-500
+                                                                max-md:text-[10px]
+                                                            "
+                                                        >
+                                                            {
+                                                                product.stripsPerBox
+                                                            }{" "}
+                                                            ×{" "}
+                                                            {
+                                                                product.tabletsPerStrip
+                                                            }{" "}
+                                                            Strip
                                                         </p>
                                                     )}
                                             </div>
                                         )}
 
-                                        {(product.category === "Baby & Mom Care" ||
-                                            product.category === "Healthcare") && (
-                                            <p className="
-                                                text-sm
-                                                font-bold
-                                                text-slate-800
-
-                                                max-md:text-[12px]
-                                            ">
+                                        {(product.category ===
+                                            "Baby & Mom Care" ||
+                                            product.category ===
+                                                "Healthcare") && (
+                                            <p
+                                                className="
+                                                    text-sm
+                                                    font-bold
+                                                    text-slate-800
+                                                    max-md:text-[12px]
+                                                "
+                                            >
                                                 {product.size}
                                             </p>
                                         )}
 
-                                        {product.category === "Medical Device" && (
-                                            <p className="
-                                                text-sm
-                                                font-bold
-                                                text-slate-800
-
-                                                max-md:text-[12px]
-                                            ">
+                                        {product.category ===
+                                            "Medical Device" && (
+                                            <p
+                                                className="
+                                                    text-sm
+                                                    font-bold
+                                                    text-slate-800
+                                                    max-md:text-[12px]
+                                                "
+                                            >
                                                 {product.model}
                                             </p>
                                         )}
@@ -285,20 +327,18 @@ export default function ProductCardPage({
                             )}
                         </div>
 
-                        {/* ==================================================
+                        {/* ================================
                             PRODUCT CONTENT
-                        ================================================== */}
+                        ================================= */}
                         <div
                             className="
                                 p-3
                                 flex
                                 flex-col
                                 flex-1
-
                                 max-md:p-2.5
                             "
                         >
-
                             {/* PRODUCT NAME */}
                             <h2
                                 className="
@@ -309,16 +349,13 @@ export default function ProductCardPage({
                                     min-h-[38px]
                                     md:text-sm
                                     md:min-h-[48px]
-
-                                    max-md:text-[12.5px]
-                                    max-md:leading-[1.4]
-                                    max-md:min-h-[36px]
+                                    max-md:text-[12px]
                                 "
                             >
                                 {product.name}
                             </h2>
 
-                            {/* GENERIC NAME */}
+                            {/* GENERIC */}
                             {product.category === "Medicine" &&
                                 product.genericName && (
                                     <p
@@ -328,10 +365,7 @@ export default function ProductCardPage({
                                             font-medium
                                             mt-1
                                             min-h-[22px]
-
-                                            max-md:text-[12.5px]
-                                            max-md:leading-tight
-                                            max-md:min-h-[21px]
+                                            max-md:text-[12px]
                                             max-md:line-clamp-1
                                         "
                                     >
@@ -349,9 +383,7 @@ export default function ProductCardPage({
                                         text-sm
                                         mt-1
                                         min-h-[22px]
-
                                         max-md:text-[12px]
-                                        max-md:min-h-[20px]
                                         max-md:line-clamp-1
                                     "
                                 >
@@ -367,7 +399,6 @@ export default function ProductCardPage({
                                         text-sm
                                         mt-1
                                         min-h-[22px]
-
                                         max-md:hidden
                                     "
                                 >
@@ -383,7 +414,6 @@ export default function ProductCardPage({
                                         text-sm
                                         mt-1
                                         min-h-[22px]
-
                                         max-md:hidden
                                     "
                                 >
@@ -395,70 +425,44 @@ export default function ProductCardPage({
                             )}
 
                             {/* RATING */}
-                            <div
-                                className="
-                                    flex
-                                    items-center
-                                    gap-1
-                                    mt-2
-
-                                    max-md:mt-2
-                                "
-                            >
-                                <span
-                                    className="
-                                        text-yellow-500
-
-                                        max-md:text-[12px]
-                                    "
-                                >
+                            <div className="flex items-center gap-1 mt-2">
+                                <span className="text-yellow-500">
                                     ★★★★★
                                 </span>
 
-                                <span
-                                    className="
-                                        text-xs
-                                        text-slate-500
-
-                                        max-md:text-[10px]
-                                    "
-                                >
+                                <span className="text-xs text-slate-500">
                                     (4.8)
                                 </span>
                             </div>
 
-                            {/* ==================================================
-                                PRICE
-                            ================================================== */}
+                            {/* PRICE */}
                             <div
                                 className="
-                                    mt-2.5                                    min-h-[60px]
-
+                                    mt-2.5
+                                    min-h-[60px]
                                     max-md:mt-2
                                     max-md:min-h-[54px]
                                 "
                             >
                                 <div className="flex items-center gap-2 flex-wrap">
-
                                     <span
                                         className="
                                             text-lg
                                             font-bold
                                             text-green-600
-
                                             max-md:text-[16px]
                                         "
                                     >
                                         ৳ {finalPrice}
                                     </span>
 
-                                    {(product.discount ?? 0) > 0 && (
+                                    {(product.discount ?? 0) >
+                                        0 && (
                                         <span
                                             className="
                                                 text-sm
                                                 text-gray-400
                                                 line-through
-
                                                 max-md:text-[12px]
                                             "
                                         >
@@ -467,19 +471,9 @@ export default function ProductCardPage({
                                     )}
                                 </div>
 
-                                {/* DISCOUNT INFORMATION */}
-                                {(product.discount ?? 0) > 0 && (
-                                    <div
-                                        className="
-                                            flex
-                                            items-center
-                                            gap-2
-                                            mt-2
-
-                                            max-md:mt-2
-                                            max-md:gap-1.5
-                                        "
-                                    >
+                                {(product.discount ?? 0) >
+                                    0 && (
+                                    <div className="flex items-center gap-2 mt-2">
                                         <span
                                             className="
                                                 bg-red-500
@@ -490,11 +484,6 @@ export default function ProductCardPage({
                                                 px-2
                                                 py-1
                                                 rounded-full
-                                                whitespace-nowrap
-
-                                                max-md:text-[9px]
-                                                max-md:px-1.5
-                                                max-md:py-0.5
                                             "
                                         >
                                             {product.discount}% OFF
@@ -506,14 +495,13 @@ export default function ProductCardPage({
                                                 md:text-xs
                                                 text-green-600
                                                 font-semibold
-
-                                                max-md:text-[9px]
                                             "
                                         >
                                             Save ৳{" "}
                                             {Math.round(
                                                 (product.price *
-                                                    (product.discount || 0)) /
+                                                    (product.discount ||
+                                                        0)) /
                                                     100
                                             )}
                                         </span>
@@ -521,87 +509,35 @@ export default function ProductCardPage({
                                 )}
                             </div>
 
-                            {/* ==================================================
+                            {/* ================================
                                 LAB TEST
-                            ================================================== */}
+                            ================================= */}
                             {product.category === "Lab-Tests" ? (
                                 <>
-                                    <div
-                                        className="
-                                            flex
-                                            gap-2
-                                            mt-2.5                                            flex-wrap
-
-                                            max-md:mt-2
-                                            max-md:gap-1
-                                        "
-                                    >
-                                        <span
-                                            className="
-                                                bg-blue-100
-                                                text-blue-700
-                                                text-xs
-                                                px-2
-                                                py-1
-                                                rounded-full
-                                                font-medium
-
-                                                max-md:text-[9px]
-                                                max-md:px-1.5
-                                                max-md:py-0.5
-                                            "
-                                        >
+                                    <div className="flex gap-2 mt-2.5 flex-wrap">
+                                        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
                                             🧪 Professional Testing
                                         </span>
 
-                                        <span
-                                            className="
-                                                bg-teal-100
-                                                text-teal-700
-                                                text-xs
-                                                px-2
-                                                py-1
-                                                rounded-full
-                                                font-medium
-
-                                                max-md:text-[9px]
-                                                max-md:px-1.5
-                                                max-md:py-0.5
-                                            "
-                                        >
+                                        <span className="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full font-medium">
                                             🏥 Verified Laboratory
                                         </span>
 
                                         {product.homeSampleCollection && (
-                                            <span
-                                                className="
-                                                    bg-green-100
-                                                    text-green-700
-                                                    text-xs
-                                                    px-2
-                                                    py-1
-                                                    rounded-full
-                                                    font-medium
-
-                                                    max-md:text-[9px]
-                                                    max-md:px-1.5
-                                                    max-md:py-0.5
-                                                "
-                                            >
+                                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
                                                 🏠 Home Collection
                                             </span>
                                         )}
                                     </div>
 
-                                    {/* BOOK TEST */}
-                                    <div className="mt-auto pt-4 max-md:pt-3">
+                                    <div className="mt-auto pt-4">
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.push(
-                                                    `/product/${product.id}`
-                                                );
-                                            }}
+                                            onClick={(e) =>
+                                                goToProductDetails(
+                                                    product.id,
+                                                    e
+                                                )
+                                            }
                                             className="
                                                 w-full
                                                 py-3
@@ -611,13 +547,6 @@ export default function ProductCardPage({
                                                 text-white
                                                 font-semibold
                                                 transition-all
-                                                duration-300
-                                                hover:shadow-lg
-                                                hover:shadow-blue-200
-
-                                                max-md:py-2.5
-                                                max-md:rounded-lg
-                                                max-md:text-[12px]
                                             "
                                         >
                                             🧪 Book Test
@@ -626,33 +555,28 @@ export default function ProductCardPage({
                                 </>
                             ) : (
                                 <>
-                                    {/* ==================================================
-                                        NORMAL PRODUCT STATUS
-                                    ================================================== */}
+                                    {/* NORMAL PRODUCT STATUS */}
                                     <div
                                         className="
                                             flex
                                             gap-2
-                                            mt-2.5                                            flex-wrap
-
+                                            mt-2.5
+                                            flex-wrap
                                             max-md:mt-2
-                                            max-md:gap-1
                                         "
                                     >
                                         <span
                                             className="
                                                 bg-sky-50
                                                 text-sky-700
-                                                border border-sky-100
+                                                border
+                                                border-sky-100
                                                 text-xs
                                                 px-2
                                                 py-1
                                                 rounded-full
                                                 font-medium
-
                                                 max-md:text-[9px]
-                                                max-md:px-1.5
-                                                max-md:py-0.5
                                             "
                                         >
                                             🚚 Quick Delivery
@@ -662,60 +586,46 @@ export default function ProductCardPage({
                                             className="
                                                 bg-emerald-50
                                                 text-emerald-700
-                                                border border-emerald-100
+                                                border
+                                                border-emerald-100
                                                 text-xs
                                                 px-2
                                                 py-1
                                                 rounded-full
                                                 font-medium
-
                                                 max-md:text-[9px]
-                                                max-md:px-1.5
-                                                max-md:py-0.5
                                             "
                                         >
                                             ✓ Genuine
                                         </span>
 
                                         {product.stock > 10 ? (
-                                            <span
-                                                className="
-                                                    font-bold
-                                                    text-green-600
-
-                                                    max-md:text-[10px]
-                                                "
-                                            >
-                                                ▣ In Stock ({product.stock})
+                                            <span className="font-bold text-green-600 max-md:text-[10px]">
+                                                ▣ In Stock (
+                                                {product.stock})
                                             </span>
                                         ) : product.stock > 0 ? (
-                                            <span
-                                                className="
-                                                    font-bold
-                                                    text-amber-600
-
-                                                    max-md:text-[10px]
-                                                "
-                                            >
-                                                Only {product.stock} Left
+                                            <span className="font-bold text-amber-600 max-md:text-[10px]">
+                                                Only{" "}
+                                                {product.stock}{" "}
+                                                Left
                                             </span>
                                         ) : (
-                                            <span
-                                                className="
-                                                    font-bold
-                                                    text-red-600
-
-                                                    max-md:text-[10px]
-                                                "
-                                            >
+                                            <span className="font-bold text-red-600 max-md:text-[10px]">
                                                 × Out of Stock
                                             </span>
                                         )}
                                     </div>
 
-                                    {/* ==================================================
+                                    {/* ================================
                                         ACTION BUTTONS
-                                    ================================================== */}
+
+                                        IMPORTANT:
+                                        এখানে আর addToCart নেই।
+
+                                        দুই button-ই Product Details Page
+                                        খুলবে।
+                                    ================================= */}
                                     <div
                                         className="
                                             mt-auto
@@ -723,29 +633,20 @@ export default function ProductCardPage({
                                             grid
                                             grid-cols-2
                                             gap-2
-
                                             max-md:pt-3
-                                            max-md:gap-1.5
                                         "
                                     >
                                         {/* ADD TO CART */}
                                         <button
-                                            disabled={isOutOfStock}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-
-                                                addToCart({
-                                                    id: product.id,
-                                                    name: product.name,
-                                                    price: product.price,
-                                                    imageUrl: product.imageUrl,
-                                                    quantity: 1,
-                                                    discount:
-                                                        product.discount || 0,
-                                                });
-
-                                                router.push("/cart");
-                                            }}
+                                            disabled={
+                                                isOutOfStock
+                                            }
+                                            onClick={(e) =>
+                                                goToProductDetails(
+                                                    product.id,
+                                                    e
+                                                )
+                                            }
                                             className={`
                                                 py-2.5
                                                 rounded-xl
@@ -763,7 +664,7 @@ export default function ProductCardPage({
                                                 ${
                                                     isOutOfStock
                                                         ? "bg-gray-400 cursor-not-allowed"
-                                                        : "bg-teal-600 hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-300"
+                                                        : "bg-teal-600 hover:bg-teal-700 hover:shadow-lg"
                                                 }
                                             `}
                                         >
@@ -772,22 +673,15 @@ export default function ProductCardPage({
 
                                         {/* BUY NOW */}
                                         <button
-                                            disabled={isOutOfStock}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-
-                                                addToCart({
-                                                    id: product.id,
-                                                    name: product.name,
-                                                    price: product.price,
-                                                    imageUrl: product.imageUrl,
-                                                    quantity: 1,
-                                                    discount:
-                                                        product.discount || 0,
-                                                });
-
-                                                router.push("/checkout");
-                                            }}
+                                            disabled={
+                                                isOutOfStock
+                                            }
+                                            onClick={(e) =>
+                                                goToProductDetails(
+                                                    product.id,
+                                                    e
+                                                )
+                                            }
                                             className={`
                                                 py-2.5
                                                 rounded-xl

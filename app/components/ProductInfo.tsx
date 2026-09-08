@@ -7,16 +7,30 @@ type Props = {
 };
 
 export default function ProductInfo({ product }: Props) {
+  const isVial =
+    String(product.unitType ?? "").toLowerCase() === "vial" ||
+    String(product.packType ?? "").toLowerCase() === "vial" ||
+    String(product.dosageForm ?? "").toLowerCase() === "vial" ||
+    String(product.form ?? "").toLowerCase() === "vial" ||
+    String(product.sellingUnit ?? "").toLowerCase() === "vial" ||
+    String(product.selectedUnit ?? "").toLowerCase() === "vial" ||
+    product.vialPrice !== undefined ||
+    product.vialSize !== undefined ||
+    product.unitOptions?.some(
+      (unit: string) =>
+        String(unit).toLowerCase() === "vial"
+    );
+
   return (
-    <div className="mt-8">
+    <div className="mt-6 sm:mt-8 w-full min-w-0 overflow-hidden">
 
       {/* Section Heading */}
-      <div className="mb-5">
-        <h2 className="text-2xl font-bold text-slate-900">
+      <div className="mb-4 sm:mb-5">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
           Product Information
         </h2>
 
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Detailed information about this product
         </p>
       </div>
@@ -26,8 +40,11 @@ export default function ProductInfo({ product }: Props) {
       ========================== */}
 
       {product.description && (
-        <Accordion title="📄 Description" defaultOpen>
-          <div className="whitespace-pre-line leading-7 text-slate-700">
+        <Accordion
+          title="📄 Description"
+          defaultOpen
+        >
+          <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
             {product.description}
           </div>
         </Accordion>
@@ -35,7 +52,7 @@ export default function ProductInfo({ product }: Props) {
 
       {product.features && (
         <Accordion title="✨ Features">
-          <div className="whitespace-pre-line leading-7 text-slate-700">
+          <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
             {product.features}
           </div>
         </Accordion>
@@ -43,7 +60,7 @@ export default function ProductInfo({ product }: Props) {
 
       {product.specifications && (
         <Accordion title="📋 Specifications">
-          <div className="whitespace-pre-line leading-7 text-slate-700">
+          <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
             {product.specifications}
           </div>
         </Accordion>
@@ -81,7 +98,7 @@ export default function ProductInfo({ product }: Props) {
 
           {product.keyIngredients && (
             <Accordion title="🧪 Key Ingredients">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.keyIngredients}
               </div>
             </Accordion>
@@ -95,7 +112,7 @@ export default function ProductInfo({ product }: Props) {
 
           {product.benefits && (
             <Accordion title="🌿 Benefits">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.benefits}
               </div>
             </Accordion>
@@ -103,7 +120,7 @@ export default function ProductInfo({ product }: Props) {
 
           {product.howToUse && (
             <Accordion title="📖 How to Use">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.howToUse}
               </div>
             </Accordion>
@@ -111,7 +128,7 @@ export default function ProductInfo({ product }: Props) {
 
           {product.ingredients && (
             <Accordion title="🧪 Ingredients / Composition">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.ingredients}
               </div>
             </Accordion>
@@ -175,70 +192,174 @@ export default function ProductInfo({ product }: Props) {
 
       {product.category === "Medicine" && (
         <>
+          {/* VIAL INFORMATION */}
+          {isVial && (
+            <Accordion
+              title="💉 Vial Information"
+              defaultOpen
+            >
+              <div className="space-y-3 text-sm sm:text-base">
+
+                {product.vialSize && (
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
+                    <span className="font-semibold text-slate-700">
+                      Vial Size
+                    </span>
+
+                    <span className="text-slate-600 sm:text-right">
+                      {product.vialSize}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
+                  <span className="font-semibold text-slate-700">
+                    Available Unit
+                  </span>
+
+                  <span className="font-semibold text-blue-600 sm:text-right">
+                    Vial
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
+                  <span className="font-semibold text-slate-700">
+                    Selling Unit
+                  </span>
+
+                  <span className="font-semibold text-green-600 sm:text-right">
+                    Vial
+                  </span>
+                </div>
+
+              </div>
+            </Accordion>
+          )}
+
+          {/* NORMAL TABLET / STRIP / BOX INFORMATION */}
+          {!isVial && (
+            <>
+              {(product.stripsPerBox ||
+                product.tabletsPerStrip ||
+                product.unitType) && (
+                <Accordion title="💊 Pack Information">
+                  <div className="space-y-3 text-sm sm:text-base">
+
+                    {product.stripsPerBox && (
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
+                        <span className="font-semibold text-slate-700">
+                          Strips Per Box
+                        </span>
+
+                        <span className="text-slate-600 sm:text-right">
+                          {product.stripsPerBox}
+                        </span>
+                      </div>
+                    )}
+
+                    {product.tabletsPerStrip && (
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
+                        <span className="font-semibold text-slate-700">
+                          Tablets Per Strip
+                        </span>
+
+                        <span className="text-slate-600 sm:text-right">
+                          {product.tabletsPerStrip}
+                        </span>
+                      </div>
+                    )}
+
+                    {product.unitType && (
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
+                        <span className="font-semibold text-slate-700">
+                          Selling Unit
+                        </span>
+
+                        <span className="text-green-600 font-semibold sm:text-right">
+                          {product.unitType}
+                        </span>
+                      </div>
+                    )}
+
+                  </div>
+                </Accordion>
+              )}
+            </>
+          )}
+
+          {/* PHARMACOLOGY */}
           {product.pharmacology && (
             <Accordion title="💊 Pharmacology">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.pharmacology}
               </div>
             </Accordion>
           )}
 
+          {/* INDICATION */}
           {product.indication && (
             <Accordion title="🩺 Indication">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.indication}
               </div>
             </Accordion>
           )}
 
+          {/* DOSAGE */}
           {product.dosage && (
             <Accordion title="💉 Dosage">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.dosage}
               </div>
             </Accordion>
           )}
 
+          {/* ADMINISTRATION */}
           {product.administration && (
             <Accordion title="💊 Administration">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.administration}
               </div>
             </Accordion>
           )}
 
+          {/* SIDE EFFECTS */}
           {product.sideEffects && (
             <Accordion title="⚠️ Side Effects">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.sideEffects}
               </div>
             </Accordion>
           )}
 
+          {/* PRECAUTIONS */}
           {product.precautions && (
             <Accordion title="🛡️ Precautions">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.precautions}
               </div>
             </Accordion>
           )}
 
+          {/* PREGNANCY */}
           {product.pregnancyLactation && (
             <Accordion title="🤰 Pregnancy & Lactation">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.pregnancyLactation}
               </div>
             </Accordion>
           )}
 
+          {/* DRUG INTERACTION */}
           {product.drugInteraction && (
             <Accordion title="🔄 Drug Interaction">
-              <div className="whitespace-pre-line leading-7 text-slate-700">
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.drugInteraction}
               </div>
             </Accordion>
           )}
 
+          {/* STORAGE */}
           {product.storageInfo && (
             <Accordion title="📦 Storage">
               {product.storageInfo}

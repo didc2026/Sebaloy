@@ -1,30 +1,150 @@
-"use client";
+ "use client";
 
 import { useRouter } from "next/navigation";
 import { useCart } from "../context/CartContext";
+
 export default function CartPage() {
   const router = useRouter();
 
-  const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity } = useCart();
+  const {
+    cartItems,
+    removeFromCart,
+    increaseQuantity,
+    decreaseQuantity,
+    updateCartItemUnit,
+  } = useCart();
+
+  const normalizeUnit = (value: unknown) =>
+    String(value ?? "").trim();
+
+  const normalizeCategory = (value: unknown) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+
+  const isMedicine = (item: any) =>
+    normalizeCategory(item.category) === "medicine";
+
+  const getUnitOptions = (item: any): string[] => {
+    const category = normalizeCategory(item.category);
+
+    if (category === "medicaldevice" || category === "medicaldevices") {
+      return ["Piece"];
+    }
+
+    if (
+      category === "healthcare" ||
+      category === "babymomcare" ||
+      category === "babymom" ||
+      category === "personalcare"
+    ) {
+      return ["Bottle", "Piece"];
+    }
+
+    if (isMedicine(item)) {
+      const explicit = Array.isArray(item.unitOptions)
+        ? item.unitOptions.map(normalizeUnit).filter(Boolean)
+        : [];
+
+      if (explicit.length > 0) return Array.from(new Set(explicit));
+
+      const options: string[] = [];
+      const unitType = normalizeUnit(item.unitType).toLowerCase();
+      const selected = normalizeUnit(item.selectedUnit).toLowerCase();
+
+      if (
+        normalizeUnit(item.vialSize) ||
+        item.vialPrice !== undefined ||
+        unitType === "vial" ||
+        selected === "vial"
+      ) options.push("Vial");
+
+      if (
+        item.stripPrice !== undefined ||
+        item.tabletsPerStrip !== undefined ||
+        unitType === "strip" ||
+        selected === "strip"
+      ) options.push("Strip");
+
+      if (
+        item.boxPrice !== undefined ||
+        item.stripsPerBox !== undefined ||
+        unitType === "box" ||
+        selected === "box"
+      ) options.push("Box");
+
+      return Array.from(new Set(options));
+    }
+
+    const unitType = normalizeUnit(item.unitType);
+    if (
+      unitType &&
+      !["medicine", "strip", "box", "vial"].includes(unitType.toLowerCase())
+    ) return [unitType];
+
+    const selected = normalizeUnit(item.selectedUnit);
+    if (
+      selected &&
+      !["strip", "box", "vial"].includes(selected.toLowerCase())
+    ) return [selected];
+
+    return [];
+  };
+
+  const getSelectedUnit = (item: any, options: string[]) => {
+    const current = normalizeUnit(item.selectedUnit);
+    const currentMatch = options.find(
+      (u) => u.toLowerCase() === current.toLowerCase()
+    );
+    if (currentMatch) return currentMatch;
+
+    const type = normalizeUnit(item.unitType);
+    const typeMatch = options.find(
+      (u) => u.toLowerCase() === type.toLowerCase()
+    );
+    if (typeMatch) return typeMatch;
+
+    return options[0] || "";
+  };
+
+  const getUnitPrice = (item: any) => {
+    const selected = normalizeUnit(item.selectedUnit).toLowerCase();
+    let price = Number(item.price ?? 0);
+
+    if (isMedicine(item) && selected === "vial") {
+      price = Number(item.vialPrice ?? item.price ?? 0);
+    } else if (isMedicine(item) && selected === "box") {
+      price = Number(
+        item.boxPrice ??
+          Number(item.stripPrice ?? item.price ?? 0) *
+            Number(item.stripsPerBox || 1)
+      );
+    } else if (isMedicine(item) && selected === "strip") {
+      price = Number(item.stripPrice ?? item.price ?? 0);
+    }
+
+    return Math.round(
+      price - (price * Number(item.discount || 0)) / 100
+    );
+  };
 
   const total = cartItems.reduce(
-    (sum, item) =>
-      sum +
-      Math.round(
-        item.price -
-        (item.price * (item.discount || 0)) / 100
-      ) * item.quantity,
+    (sum, item) => sum + getUnitPrice(item) * item.quantity,
     0
-  ); const totalItems = cartItems.reduce(
+  );
+
+  const totalItems = cartItems.reduce(
     (sum, item) => sum + item.quantity,
     0
   );
-  const grandTotal = total;  // Empty Cart State
+
   if (cartItems.length === 0) {
     return (
-      <main className="min-h-screen bg-slate-100 flex items-center justify-center p-8">
-        <div className="bg-white p-10 rounded-2xl shadow-md text-center max-w-md">
-          <h1 className="text-3xl font-bold mb-4">
+      <main className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-8">
+        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-md text-center max-w-md w-full">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">
             Your Cart is Empty
           </h1>
 
@@ -34,7 +154,7 @@ export default function CartPage() {
 
           <button
             onClick={() => router.push("/")}
-            className="bg-teal-600 text-white px-6 py-3 rounded-xl"
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold"
           >
             Continue Shopping
           </button>
@@ -44,114 +164,277 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">
-          Shopping Cart
-        </h1>
+    <main className="min-h-screen bg-slate-100 px-3 py-4 sm:px-5 sm:py-6 md:p-8">
+      <div className="w-full max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            Shopping Cart
+          </h1>
 
-        <div className="space-y-4">
-          {cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl shadow-md p-4 flex items-start gap-4 max-w-3xl mx-auto"
-            >
+          <span className="text-sm sm:text-base text-gray-500">
+            {totalItems} item{totalItems !== 1 ? "s" : ""}
+          </span>
+        </div>
 
-              <div className="w-24 h-24 md:w-28 md:h-28 bg-slate-50 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center flex-shrink-0">                {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-full object-contain p-2" />
-              )}
-              </div>
+        <div className="space-y-4 sm:space-y-5">
+          {cartItems.map((item: any) => {
+            const unitOptions = getUnitOptions(item);
+            const selectedUnit = getSelectedUnit(item, unitOptions);
+            const medicineProduct = isMedicine(item);
+            const vialProduct =
+              medicineProduct && selectedUnit.toLowerCase() === "vial";
 
-              <div className="flex-1 flex flex-col justify-between">
-                <h2 className="text-xl font-bold">
-                  {item.name}
-                </h2>
-                <p className="text-gray-500 text-sm">
-                  Pack: {item.packSize} {item.packType}
-                </p>
+            const unitPrice = getUnitPrice(item);
 
-                <p className="text-gray-500 text-sm">
-                  Unit: {item.unitType}
-                </p>
+            const vialSize =
+              item.vialSize ||
+              item.size ||
+              item.packSize ||
+              "";
 
-                <div className="flex items-center gap-3 mt-2">
-                  <button
-                    onClick={() => decreaseQuantity(item.id)}
-                    className="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-xl font-bold hover:bg-slate-200 transition"                  >
-                    -
-                  </button>
+            const tabletsPerStrip =
+              Number(item.tabletsPerStrip || 0);
 
-                  <span className="font-bold text-lg">
-                    {item.quantity}
+            const stripsPerBox =
+              Number(item.stripsPerBox || 0);
+
+            const stripBasePrice =
+              Number(item.stripPrice ?? item.price ?? 0);
+
+            const boxBasePrice =
+              Number(
+                item.boxPrice ??
+                  stripBasePrice * (stripsPerBox || 1)
+              );
+
+            return (
+              <div
+                key={`${item.id}-${selectedUnit}`}
+                className="bg-white rounded-2xl shadow-md p-3 sm:p-5 overflow-hidden min-w-0"
+              >
+                {/* Product header */}
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="w-full xs:w-24 h-28 xs:h-24 md:w-28 md:h-28 bg-slate-50 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center flex-shrink-0">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">
+                        No Image
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 w-full">
+                    <h2 className="text-lg sm:text-xl font-bold break-words">
+                      {item.name}
+                    </h2>
+
+                    {item.company && (
+                      <p className="text-gray-500 text-sm mt-1 break-words">
+                        {item.company}
+                      </p>
+                    )}
+
+                    {vialProduct && (
+                      <p className="text-gray-500 text-sm mt-1">
+                        Pack Size: {vialSize || "1 Vial"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* CATEGORY-AWARE UNIT */}
+                {unitOptions.length > 0 && (
+                  <div className="mt-4 sm:mt-5">
+                    <h3 className="font-semibold mb-2.5 sm:mb-3">
+                      Select Unit
+                    </h3>
+
+                    <div className="space-y-2.5 sm:space-y-3">
+                      {unitOptions.map((unit) => {
+                        const lower = unit.toLowerCase();
+                        let optionPrice = Number(item.price ?? 0);
+
+                        if (medicineProduct && lower === "vial") {
+                          optionPrice = Number(item.vialPrice ?? item.price ?? 0);
+                        } else if (medicineProduct && lower === "box") {
+                          optionPrice = Number(
+                            item.boxPrice ??
+                              Number(item.stripPrice ?? item.price ?? 0) *
+                                Number(item.stripsPerBox || 1)
+                          );
+                        } else if (medicineProduct && lower === "strip") {
+                          optionPrice = Number(item.stripPrice ?? item.price ?? 0);
+                        }
+
+                        optionPrice = Math.round(
+                          optionPrice -
+                            (optionPrice * Number(item.discount || 0)) / 100
+                        );
+
+                        const detail =
+                          medicineProduct && lower === "vial"
+                            ? (item.vialSize || item.size || item.packSize || "")
+                            : medicineProduct && lower === "strip"
+                              ? (Number(item.tabletsPerStrip || 0) > 0
+                                  ? `${Number(item.tabletsPerStrip)} Tablets`
+                                  : "")
+                              : medicineProduct && lower === "box"
+                                ? (Number(item.stripsPerBox || 0) > 0
+                                    ? `${Number(item.stripsPerBox)} Strips`
+                                    : "")
+                                : "";
+
+                        const active =
+                          selectedUnit.toLowerCase() === lower;
+
+                        return (
+                          <button
+                            key={unit}
+                            type="button"
+                            onClick={() => updateCartItemUnit(item.id, unit)}
+                            className={`w-full flex items-center justify-between gap-3 border rounded-xl px-3 sm:px-4 py-3 transition ${
+                              active
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-300 bg-white hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                              <span
+                                className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                                  active
+                                    ? "border-blue-600"
+                                    : "border-gray-400"
+                                }`}
+                              >
+                                {active && (
+                                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                                )}
+                              </span>
+
+                              <div className="text-left min-w-0">
+                                <p className="font-semibold break-words">
+                                  1 {unit}
+                                </p>
+                                {detail && (
+                                  <p className="text-sm text-gray-500 break-words">
+                                    {detail}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <span className="font-bold text-green-600 shrink-0">
+                              ৳ {optionPrice}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quantity */}
+                <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-2.5 sm:gap-4">
+                  <span className="font-semibold">
+                    Quantity:
                   </span>
 
-                  <button
-                    onClick={() => increaseQuantity(item.id)}
-                    className="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-xl font-bold hover:bg-slate-200 transition"
-                  >
-                    +
-                  </button>
-                </div>
-                {item.discount && item.discount > 0 ? (
-                  <>
-                    <p className="text-gray-400 line-through">
-                      ৳ {item.price}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-green-600 text-xl font-bold">
-                        ৳{" "}
-                        {Math.round(
-                          item.price -
-                          (item.price * item.discount) / 100
-                        )}
-                      </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => decreaseQuantity(item.id)}
+                      aria-label={`Decrease ${item.name} quantity`}
+                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 font-bold text-xl hover:bg-slate-200"
+                    >
+                      -
+                    </button>
 
-                      <span className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                        {item.discount}% OFF
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-green-600 font-bold">
-                    ৳ {item.price}
-                  </p>
-                )}
+                    <span className="font-bold text-lg min-w-6 text-center">
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      onClick={() => increaseQuantity(item.id)}
+                      aria-label={`Increase ${item.name} quantity`}
+                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 font-bold text-xl hover:bg-slate-200"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div className="mt-4 border-t pt-4 space-y-1.5">
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <span className="text-gray-600">
+                      Unit
+                    </span>
+                    <span className="font-bold text-gray-900">
+                      {selectedUnit}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <span className="text-gray-600">
+                      Unit Price
+                    </span>
+                    <span className="font-bold text-green-600">
+                      ৳ {unitPrice}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <span className="text-gray-600">
+                      Item Total
+                    </span>
+                    <span className="text-xl font-bold text-green-600">
+                      ৳ {unitPrice * item.quantity}
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => removeFromCart(item.id)}
-                  className="mt-4 inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"                >
+                  className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-semibold"
+                >
                   Remove
                 </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md p-6 mt-8">
-          <h2 className="text-2xl font-bold">
+        {/* Order summary */}
+        <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 mt-5 sm:mt-8">
+          <h2 className="text-xl sm:text-2xl font-bold">
             Order Summary
           </h2>
 
-          <p className="mt-3">
+          <p className="mt-2.5 sm:mt-3">
             Total Items: {totalItems}
           </p>
-          <div className="space-y-2 mt-4">
-            <div className="flex justify-between">
+
+          <div className="space-y-3 mt-4 sm:mt-5">
+            <div className="flex justify-between gap-4">
               <span>Subtotal</span>
-              <span>৳ {total}</span>
+              <span className="font-medium">৳ {total}</span>
             </div>
 
             <hr />
 
-            <div className="flex justify-between font-bold text-xl text-teal-600">
+            <div className="flex justify-between gap-4 font-bold text-lg sm:text-xl text-teal-600">
               <span>Grand Total</span>
-              <span>৳ {grandTotal}</span>
+              <span>৳ {total}</span>
             </div>
-          </div>          <button
+          </div>
+
+          <button
             onClick={() => router.push("/checkout")}
-            className="w-full mt-6 bg-teal-600 text-white py-3 rounded-xl"
+            className="w-full mt-5 sm:mt-6 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold"
           >
             Proceed To Checkout
           </button>

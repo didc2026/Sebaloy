@@ -59,7 +59,7 @@ export default function Dashboard() {
   const [size, setSize] = useState("");
   const [stripsPerBox, setStripsPerBox] = useState("");
   const [tabletsPerStrip, setTabletsPerStrip] = useState("");
-  const [unitType, setUnitType] = useState("Tablet");
+  const [unitType, setUnitType] = useState("");
   const [discount, setDiscount] = useState("0");
   const [featured, setFeatured] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
@@ -1863,8 +1863,16 @@ export default function Dashboard() {
                     value={category}
                     onChange={(e) => {
                       const newCategory = e.target.value;
+                      const newCategoryData = categories.find(
+                        (cat: any) => cat.name === newCategory
+                      );
 
                       setCategory(newCategory);
+                      setUnitType(
+                        Array.isArray(newCategoryData?.unitTypes)
+                          ? newCategoryData.unitTypes[0] || ""
+                          : ""
+                      );
 
                       // Clear category-specific fields
                       setBrand("");

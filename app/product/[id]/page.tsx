@@ -94,7 +94,7 @@ export default function ProductPage() {
   if (!product) return <div>Product not found</div>;
   return (
     <main className="min-h-screen bg-slate-100 py-3 px-2 sm:py-6">
-      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-3 sm:p-6">
+      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-3 sm:p-6 overflow-hidden">
         <div
           className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-3 py-3 sm:px-6 sm:py-4 shadow-sm"        >
           <button
@@ -104,7 +104,7 @@ export default function ProductPage() {
             ← Back
           </button>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600 min-w-0 break-words">
 
             <button
               onClick={() => router.push("/")}
@@ -131,9 +131,9 @@ export default function ProductPage() {
           </div>
 
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] gap-6 lg:gap-8 items-start min-w-0">
           {/* Left Side */}
-          <div>
+          <div className="min-w-0">
             <ProductGallery
               productName={product.name}
               images={
@@ -164,17 +164,17 @@ export default function ProductPage() {
                       <div
                         key={item.id}
                         onClick={() => router.push(`/product/${item.id}`)}
-                        className="flex items-center justify-between border rounded-xl p-4 hover:bg-slate-50 cursor-pointer transition"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border rounded-xl p-3 sm:p-4 hover:bg-slate-50 cursor-pointer transition min-w-0"
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                           <img
                             src={item.imageUrl}
                             alt={item.name}
-                            className="w-20 h-20 object-contain border rounded-lg p-1"
+                            className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 object-contain border rounded-lg p-1"
                           />
 
                           <div>
-                            <h3 className="font-bold">{item.name}</h3>
+                            <h3 className="font-bold break-words">{item.name}</h3>
 
                             <p className="text-gray-500">
                               {item.company}
@@ -186,7 +186,7 @@ export default function ProductPage() {
                           </div>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-left sm:text-right shrink-0">
                           <p className="text-xl font-bold text-green-600">
                             ৳ {finalPrice}
                           </p>
@@ -204,8 +204,8 @@ export default function ProductPage() {
           </div>
 
           {/* Right Side */}
-          <div>
-            <h1 className="text-3xl font-bold leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">
               {product.name}
             </h1>
 
@@ -222,13 +222,7 @@ export default function ProductPage() {
                 </p>
               )}
 
-              {product.company && (
-                <p className="text-base text-gray-500">
-                  Company: <span className="font-medium text-gray-700">
-                    {product.company}
-                  </span>
-                </p>
-              )}
+              {/* Company is shown once in Product Information below. */}
               {product.brand && (
                 <p className="text-base text-gray-500">
                   Brand: <span className="font-medium text-gray-700">
@@ -291,7 +285,7 @@ export default function ProductPage() {
 
                       {/* MODEL */}
                       {product.model?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Model
                           </p>
@@ -303,7 +297,7 @@ export default function ProductPage() {
 
                       {/* WARRANTY */}
                       {product.warranty?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Warranty
                           </p>
@@ -315,7 +309,7 @@ export default function ProductPage() {
 
                       {/* KIT TYPE */}
                       {product.kitType?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Kit Type
                           </p>
@@ -327,7 +321,7 @@ export default function ProductPage() {
 
                       {/* NUMBER OF TESTS */}
                       {product.numberOfTests?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Number of Tests
                           </p>
@@ -339,7 +333,7 @@ export default function ProductPage() {
 
                       {/* CE / IVDR */}
                       {product.ceIvdrStatus?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             CE / IVDR Status
                           </p>
@@ -351,7 +345,7 @@ export default function ProductPage() {
 
                       {/* IVD CLASSIFICATION */}
                       {product.ivdClassification?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             IVD Classification
                           </p>
@@ -363,7 +357,7 @@ export default function ProductPage() {
 
                       {/* ANALYTICAL SENSITIVITY */}
                       {product.analyticalSensitivity?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Analytical Sensitivity
                           </p>
@@ -375,7 +369,7 @@ export default function ProductPage() {
 
                       {/* ANALYTICAL SPECIFICITY */}
                       {product.analyticalSpecificity?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Analytical Specificity
                           </p>
@@ -387,7 +381,7 @@ export default function ProductPage() {
 
                       {/* DETECTION RANGE */}
                       {product.detectionRange?.trim() && (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Detection / Measuring Range
                           </p>
@@ -399,7 +393,7 @@ export default function ProductPage() {
 
                       {/* INSTRUMENT COMPATIBILITY */}
                       {product.instrumentCompatibility?.trim() && (
-                        <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+                        <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Instrument / Analyzer Compatibility
                           </p>
@@ -411,7 +405,7 @@ export default function ProductPage() {
 
                       {/* REAGENT COMPONENTS */}
                       {product.reagentComponents?.trim() && (
-                        <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Reagent Components
                           </p>
@@ -423,7 +417,7 @@ export default function ProductPage() {
 
                       {/* CALIBRATOR / CONTROL */}
                       {product.calibratorControl?.trim() && (
-                        <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                           <p className="text-xs font-medium text-slate-500 mb-1">
                             Calibrator / Control
                           </p>
@@ -505,7 +499,7 @@ export default function ProductPage() {
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-6">
+                  <div className="p-3 sm:p-5 space-y-5 sm:space-y-6 min-w-0">
 
                     {/* =========================
           TEST IDENTITY
@@ -532,7 +526,7 @@ export default function ProductPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             {product.testName?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Test Name
                                 </p>
@@ -543,7 +537,7 @@ export default function ProductPage() {
                             )}
 
                             {product.shortName?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Short Name
                                 </p>
@@ -554,7 +548,7 @@ export default function ProductPage() {
                             )}
 
                             {product.testCategory?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Test Category
                                 </p>
@@ -565,7 +559,7 @@ export default function ProductPage() {
                             )}
 
                             {product.testCode?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Test Code
                                 </p>
@@ -576,7 +570,7 @@ export default function ProductPage() {
                             )}
 
                             {product.clinicalSpecialty?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Clinical Specialty
                                 </p>
@@ -587,7 +581,7 @@ export default function ProductPage() {
                             )}
 
                             {product.targetDiseaseCondition?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Target Disease / Condition
                                 </p>
@@ -626,7 +620,7 @@ export default function ProductPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             {product.sampleType?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Type
                                 </p>
@@ -637,7 +631,7 @@ export default function ProductPage() {
                             )}
 
                             {product.specimen?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Specimen
                                 </p>
@@ -648,7 +642,7 @@ export default function ProductPage() {
                             )}
 
                             {product.sampleVolume?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Volume
                                 </p>
@@ -659,7 +653,7 @@ export default function ProductPage() {
                             )}
 
                             {product.fastingRequirement?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Fasting Requirement
                                 </p>
@@ -670,7 +664,7 @@ export default function ProductPage() {
                             )}
 
                             {product.sampleCollectionInstructions?.trim() && (
-                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Collection Instructions
                                 </p>
@@ -681,7 +675,7 @@ export default function ProductPage() {
                             )}
 
                             {product.sampleStabilityHandling?.trim() && (
-                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Stability / Handling
                                 </p>
@@ -720,7 +714,7 @@ export default function ProductPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             {product.testMethod?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Test Method
                                 </p>
@@ -731,7 +725,7 @@ export default function ProductPage() {
                             )}
 
                             {product.testPrinciple?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Test Principle
                                 </p>
@@ -742,7 +736,7 @@ export default function ProductPage() {
                             )}
 
                             {product.testingPlatformAnalyzer?.trim() && (
-                              <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+                              <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Testing Platform / Analyzer
                                 </p>
@@ -753,7 +747,7 @@ export default function ProductPage() {
                             )}
 
                             {product.referenceRangeCutoff?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Reference Range / Cut-off
                                 </p>
@@ -764,7 +758,7 @@ export default function ProductPage() {
                             )}
 
                             {product.unit?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Unit
                                 </p>
@@ -775,7 +769,7 @@ export default function ProductPage() {
                             )}
 
                             {product.resultType?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Result Type
                                 </p>
@@ -813,7 +807,7 @@ export default function ProductPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             {product.turnaroundTime?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Turnaround Time (TAT)
                                 </p>
@@ -824,7 +818,7 @@ export default function ProductPage() {
                             )}
 
                             {product.homeSampleCollection?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Home Sample Collection
                                 </p>
@@ -835,7 +829,7 @@ export default function ProductPage() {
                             )}
 
                             {product.sampleCollectionSchedule?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Collection Schedule
                                 </p>
@@ -846,7 +840,7 @@ export default function ProductPage() {
                             )}
 
                             {product.reportDelivery?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Report Delivery
                                 </p>
@@ -857,7 +851,7 @@ export default function ProductPage() {
                             )}
 
                             {product.specialInstructions?.trim() && (
-                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="md:col-span-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Special Instructions
                                 </p>
@@ -893,7 +887,7 @@ export default function ProductPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
                             {product.partnerLaboratory?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Partner Laboratory
                                 </p>
@@ -904,7 +898,7 @@ export default function ProductPage() {
                             )}
 
                             {product.branchLocation?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Branch / Location
                                 </p>
@@ -915,7 +909,7 @@ export default function ProductPage() {
                             )}
 
                             {product.partnerLabTestCode?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Partner Lab Test Code
                                 </p>
@@ -952,7 +946,7 @@ export default function ProductPage() {
                           <div className="space-y-3">
 
                             {product.whyThisTest?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Why This Test?
                                 </p>
@@ -963,7 +957,7 @@ export default function ProductPage() {
                             )}
 
                             {product.whenRecommended?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   When is it Recommended?
                                 </p>
@@ -974,7 +968,7 @@ export default function ProductPage() {
                             )}
 
                             {product.clinicalSignificance?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Clinical Significance
                                 </p>
@@ -985,7 +979,7 @@ export default function ProductPage() {
                             )}
 
                             {product.sampleRequirements?.trim() && (
-                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
                                   Sample Requirements
                                 </p>
@@ -1084,28 +1078,6 @@ export default function ProductPage() {
                   </button>
                 </div>
 
-                {/* SERVICE INFORMATION */}
-                <div className="mt-6 rounded-2xl border border-teal-100 bg-teal-50 p-5">
-                  <h3 className="font-bold text-slate-800 mb-3">
-                    Diagnostic Service
-                  </h3>
-
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <p>✓ Partner laboratory support</p>
-
-                    {product.partnerLaboratory && (
-                      <p>
-                        ✓ Laboratory: {product.partnerLaboratory}
-                      </p>
-                    )}
-
-                    {product.reportDelivery && (
-                      <p>
-                        ✓ Report Delivery: {product.reportDelivery}
-                      </p>
-                    )}
-                  </div>
-                </div>
               </>
             ) : (
               <>

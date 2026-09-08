@@ -59,9 +59,66 @@ export default function OrderDetailsClient({ orderId }: Props) {
         loadOrder();
     }, [orderId]);
 
+    const getItemUnit = (item: any): string => {
+        const selected = String(item.selectedUnit ?? "").trim();
+        if (selected) return selected;
+
+        const unitType = String(item.unitType ?? "").trim();
+        if (unitType && !["medicine"].includes(unitType.toLowerCase())) {
+            return unitType;
+        }
+
+        const category = String(item.category ?? "")
+            .trim()
+            .toLowerCase()
+            .replace(/&/g, "and")
+            .replace(/[^a-z0-9]+/g, "");
+
+        if (category === "medicaldevice" || category === "medicaldevices") {
+            return "Piece";
+        }
+
+        if (item.vialPrice !== undefined || item.vialSize !== undefined) {
+            return "Vial";
+        }
+
+        if (item.boxPrice !== undefined && Number(item.stripsPerBox ?? 0) > 0) {
+            return "Box";
+        }
+
+        if (item.stripPrice !== undefined || item.tabletsPerStrip !== undefined) {
+            return "Strip";
+        }
+
+        return unitType || "";
+    };
+
+    const getItemUnitPrice = (item: any): number => {
+        const unit = getItemUnit(item).toLowerCase();
+        const basePrice = Number(item.price ?? 0);
+
+        if (unit === "vial") {
+            return Number(item.vialPrice ?? basePrice);
+        }
+
+        if (unit === "box") {
+            return Number(
+                item.boxPrice ??
+                (Number(item.stripPrice ?? basePrice) *
+                    Number(item.stripsPerBox || 1))
+            );
+        }
+
+        if (unit === "strip") {
+            return Number(item.stripPrice ?? basePrice);
+        }
+
+        return basePrice;
+    };
+
     if (!order) {
         return (
-            <div className="p-8">
+            <div className="p-4 sm:p-6 lg:p-8">
                 <div className="mb-6 border-b pb-4">
                     <h1 className="text-3xl font-bold text-slate-800">
                         Order Details
@@ -78,7 +135,7 @@ export default function OrderDetailsClient({ orderId }: Props) {
     }
 
     return (
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
 
             {/* =========================
                 PAGE HEADER
@@ -200,13 +257,26 @@ export default function OrderDetailsClient({ orderId }: Props) {
                             </p>
 
                             <p>
+                                <strong>Unit:</strong>{" "}
+                                {getItemUnit(item) || "—"}
+                            </p>
+
+                            {getItemUnit(item).toLowerCase() === "box" &&
+                                Number(item.stripsPerBox ?? 0) > 0 && (
+                                    <p>
+                                        <strong>Pack:</strong>{" "}
+                                        {item.stripsPerBox} Strips
+                                    </p>
+                                )}
+
+                            <p>
                                 <strong>Quantity:</strong>{" "}
                                 {item.quantity}
                             </p>
 
                             <p>
                                 <strong>Original Price:</strong>{" "}
-                                ৳{Math.round(item.price)}
+                                ৳{Math.round(getItemUnitPrice(item))}
                             </p>
 
                             {item.discount > 0 && (
@@ -220,8 +290,10 @@ export default function OrderDetailsClient({ orderId }: Props) {
                                 <strong>Selling Price:</strong>{" "}
                                 ৳
                                 {Math.round(
-                                    item.price -
-                                    (item.price * (item.discount || 0)) / 100
+                                    getItemUnitPrice(item) -
+                                    (getItemUnitPrice(item) *
+                                        (item.discount || 0)) /
+                                        100
                                 )}
                             </p>
 
@@ -229,8 +301,10 @@ export default function OrderDetailsClient({ orderId }: Props) {
                                 <strong>Total:</strong>{" "}
                                 ৳
                                 {Math.round(
-                                    item.price -
-                                    (item.price * (item.discount || 0)) / 100
+                                    getItemUnitPrice(item) -
+                                    (getItemUnitPrice(item) *
+                                        (item.discount || 0)) /
+                                        100
                                 ) * item.quantity}
                             </p>
 
