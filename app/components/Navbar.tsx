@@ -174,7 +174,7 @@ export default function Navbar() {
           max-w-7xl mx-auto
           px-4 sm:px-6 lg:px-8
           py-3
-          flex items-center justify-between
+          flex flex-wrap items-center justify-between
           gap-3
         "
       >
@@ -206,10 +206,11 @@ export default function Navbar() {
         <div
           ref={searchBoxRef}
           className="
-            hidden md:flex
-            flex-1
-            max-w-2xl
-            mx-4 lg:mx-8
+            flex
+            order-3 md:order-none
+            w-full md:flex-1
+            max-w-none md:max-w-2xl
+            mx-0 md:mx-4 lg:mx-8
             relative
           "
         >
