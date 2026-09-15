@@ -93,47 +93,46 @@ export default function ProductPage() {
 
   if (!product) return <div>Product not found</div>;
   return (
-    <main className="min-h-screen bg-slate-100 py-3 px-2 sm:py-6">
-      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-3 sm:p-6 overflow-hidden">
-        <div
-          className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-3 py-3 sm:px-6 sm:py-4 shadow-sm"        >
+    <main className="min-h-screen bg-slate-100 py-2 px-1.5 sm:py-6 sm:px-2">
+      <div className="w-full max-w-5xl mx-auto bg-white rounded-xl sm:rounded-2xl shadow-lg p-2 sm:p-6 overflow-hidden">        <div
+        className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-3 py-3 sm:px-6 sm:py-4 shadow-sm"        >
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors"
+        >
+          ← Back
+        </button>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600 min-w-0 break-words">
+
           <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors"
+            onClick={() => router.push("/")}
+            className="hover:text-blue-600 transition-colors"
           >
-            ← Back
+            Home
           </button>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600 min-w-0 break-words">
+          <span>›</span>
 
-            <button
-              onClick={() => router.push("/")}
-              className="hover:text-blue-600 transition-colors"
-            >
-              Home
-            </button>
+          <button
+            onClick={() => router.push(`/?category=${encodeURIComponent(product.category)}`)}
+            className="hover:text-blue-600 transition-colors"
+          >
+            {product.category}
+          </button>
 
-            <span>›</span>
+          <span>›</span>
 
-            <button
-              onClick={() => router.push(`/?category=${encodeURIComponent(product.category)}`)}
-              className="hover:text-blue-600 transition-colors"
-            >
-              {product.category}
-            </button>
-
-            <span>›</span>
-
-            <span className="font-medium text-slate-700">
-              {product.name}
-            </span>
-
-          </div>
+          <span className="font-medium text-slate-700">
+            {product.name}
+          </span>
 
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] gap-6 lg:gap-8 items-start min-w-0">
+
+      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] gap-3 sm:gap-5 lg:gap-8 items-start min-w-0">
           {/* Left Side */}
-          <div className="min-w-0">
+          <div className="min-w-0 overflow-hidden">
             <ProductGallery
               productName={product.name}
               images={
@@ -142,7 +141,6 @@ export default function ProductPage() {
                   : [product.imageUrl]
               }
             />
-
             {/* Desktop: Product Information stays on Left Side */}
             <div className="hidden lg:block">
               <ProductInfo product={product} />
@@ -205,15 +203,13 @@ export default function ProductPage() {
 
           {/* Right Side */}
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight break-words">
               {product.name}
             </h1>
-
             <div className="mt-2 space-y-1">
-              <p className="text-xl text-gray-600">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 break-words">
                 {product.genericName} {product.strength}
               </p>
-
               {product.size && (
                 <p className="text-base text-gray-500">
                   Size: <span className="font-medium text-gray-700">
@@ -257,32 +253,28 @@ export default function ProductPage() {
                 product.calibratorControl,
               ].some((value) => value?.trim()) && (
 
-                <div className="mt-6 border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
-
+                <div className="mt-4 sm:mt-6 border border-slate-200 rounded-xl sm:rounded-2xl bg-white shadow-sm overflow-hidden">
                   {/* Section Header */}
-                  <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <span className="text-xl">🩺</span>
-                      </div>
-
-                      <div>
-                        <h2 className="text-lg font-bold text-slate-800">
-                          Medical Device / IVD Information
-                        </h2>
-
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Technical specifications and compatibility
-                        </p>
-                      </div>
+                  <div className="px-3 sm:px-5 py-3 sm:py-4 bg-slate-50 border-b border-slate-200">                    <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                      <span className="text-xl">🩺</span>
                     </div>
+
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-800">
+                        Medical Device / IVD Information
+                      </h2>
+
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Technical specifications and compatibility
+                      </p>
+                    </div>
+                  </div>
                   </div>
 
                   {/* Technical Information */}
-                  <div className="p-5">
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
+                  <div className="p-3 sm:p-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-3">
                       {/* MODEL */}
                       {product.model?.trim() && (
                         <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
@@ -479,24 +471,23 @@ export default function ProductPage() {
                 <div className="mt-6 border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
 
                   {/* HEADER */}
-                  <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-                    <div className="flex items-center gap-3">
+                  <div className="px-3 sm:px-5 py-3 sm:py-4 bg-slate-50 border-b border-slate-200">                    <div className="flex items-center gap-3">
 
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <span className="text-xl">🧪</span>
-                      </div>
-
-                      <div>
-                        <h2 className="text-lg font-bold text-slate-800">
-                          Diagnostic Service Information
-                        </h2>
-
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Test, specimen, methodology and service information
-                        </p>
-                      </div>
-
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                      <span className="text-xl">🧪</span>
                     </div>
+
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-800">
+                        Diagnostic Service Information
+                      </h2>
+
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Test, specimen, methodology and service information
+                      </p>
+                    </div>
+
+                  </div>
                   </div>
 
                   <div className="p-3 sm:p-5 space-y-5 sm:space-y-6 min-w-0">
@@ -523,8 +514,7 @@ export default function ProductPage() {
                             Test Identity
                           </h3>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-3">
                             {product.testName?.trim() && (
                               <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
@@ -617,8 +607,7 @@ export default function ProductPage() {
                             Specimen & Collection
                           </h3>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-3">
                             {product.sampleType?.trim() && (
                               <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:p-4 min-w-0">
                                 <p className="text-xs font-medium text-slate-500 mb-1">
@@ -999,8 +988,7 @@ export default function ProductPage() {
             {product.category === "Lab-Tests" ? (
               <>
                 {/* LAB TEST SERVICE BOOKING CARD */}
-                <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
-
+                <div className="rounded-xl sm:rounded-2xl border border-blue-100 bg-white p-3 sm:p-6 shadow-sm">
                   <p className="text-sm font-medium text-slate-500 mb-2">
                     Test Price
                   </p>
@@ -1008,7 +996,6 @@ export default function ProductPage() {
                   {(() => {
                     const basePrice = Number(product.price || 0);
                     const discountPercent = Number(product.discount || 0);
-
                     const discountedPrice =
                       discountPercent > 0
                         ? Math.round(
@@ -1022,7 +1009,7 @@ export default function ProductPage() {
                     return (
                       <>
                         {/* Final Price */}
-                        <p className="text-3xl font-bold text-blue-600">
+                        <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                           ৳ {discountedPrice.toLocaleString()}
                         </p>
 
@@ -1052,7 +1039,7 @@ export default function ProductPage() {
                   })()}
 
                   {/* Test Information */}
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
                     <p className="text-sm text-slate-600">
                       🧪 Professional Testing
                     </p>
@@ -1072,8 +1059,7 @@ export default function ProductPage() {
                     onClick={() => {
                       router.push(`/product/${product.id}/book`);
                     }}
-                    className="w-full mt-5 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all"
-                  >
+                    className="w-full mt-4 sm:mt-5 py-3.5 sm:py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all"                  >
                     🧪 Book Test
                   </button>
                 </div>

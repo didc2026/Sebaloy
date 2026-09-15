@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import LayoutWrapper from "./components/LayoutWrapper";
 import { SearchProvider } from "./context/SearchContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -42,8 +43,12 @@ export const metadata: Metadata = {
   creator: "Sebaloy",
   publisher: "Sebaloy",
 
+  icons: {
+    icon: "/favicon.png",
+  },
+
   alternates: {
-    canonical: "https://sebaloybd.com",
+    canonical: "https://www.sebaloybd.com",
   },
 
   openGraph: {
@@ -68,6 +73,7 @@ export const metadata: Metadata = {
     },
   },
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -80,11 +86,10 @@ export default function RootLayout({
       >
         <CartProvider>
           <SearchProvider>
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
+            <LayoutWrapper>{children}</LayoutWrapper>
           </SearchProvider>
-        </CartProvider> </body>
+        </CartProvider>
+      </body>
     </html>
   );
 }

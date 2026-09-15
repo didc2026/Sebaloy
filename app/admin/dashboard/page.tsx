@@ -201,10 +201,18 @@ export default function Dashboard() {
   const [showProducts, setShowProducts] = useState(false);
   const [searchProduct, setSearchProduct] = useState("");
   const filteredProducts = products.filter((product: any) => {
+    const search = searchProduct.trim().toLowerCase();
+
     const matchSearch =
-      product.name?.toLowerCase().includes(searchProduct.toLowerCase()) ||
-      product.company?.toLowerCase().includes(searchProduct.toLowerCase()) ||
-      product.genericName?.toLowerCase().includes(searchProduct.toLowerCase());
+      !search ||
+      product.name?.toLowerCase().includes(search) ||
+      product.company?.toLowerCase().includes(search) ||
+      product.genericName?.toLowerCase().includes(search) ||
+      product.brand?.toLowerCase().includes(search) ||
+      product.model?.toLowerCase().includes(search) ||
+      product.testName?.toLowerCase().includes(search) ||
+      product.shortName?.toLowerCase().includes(search) ||
+      product.testCode?.toLowerCase().includes(search);
 
     const matchFilter =
       productFilter === "all"
@@ -1282,193 +1290,439 @@ export default function Dashboard() {
             });
           }}
         />
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-5">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 sm:p-4">
+          <h2 className="text-sm sm:text-base font-bold text-slate-800 mb-3">
             🧪 Diagnostic Test Bookings
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
 
-            <div className="border border-blue-100 rounded-xl p-4">
-              <p className="text-sm text-slate-500">
+            {/* Total Bookings */}
+            <div className="border border-blue-100 rounded-lg p-2.5 sm:p-3 bg-blue-50/30">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 Total Bookings
               </p>
-              <p className="text-2xl font-bold text-blue-600 mt-2">
+              <p className="text-lg sm:text-xl font-bold text-blue-600 mt-1">
                 {totalTestBookings}
               </p>
             </div>
 
-            <div className="border border-yellow-100 rounded-xl p-4">
-              <p className="text-sm text-slate-500">
+            {/* Pending */}
+            <div className="border border-yellow-100 rounded-lg p-2.5 sm:p-3 bg-yellow-50/30">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 Pending
               </p>
-              <p className="text-2xl font-bold text-yellow-600 mt-2">
+              <p className="text-lg sm:text-xl font-bold text-yellow-600 mt-1">
                 {pendingTestBookings}
               </p>
             </div>
 
-            <div className="border border-purple-100 rounded-xl p-4">
-              <p className="text-sm text-slate-500">
+            {/* Confirmed */}
+            <div className="border border-purple-100 rounded-lg p-2.5 sm:p-3 bg-purple-50/30">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 Confirmed
               </p>
-              <p className="text-2xl font-bold text-purple-600 mt-2">
+              <p className="text-lg sm:text-xl font-bold text-purple-600 mt-1">
                 {confirmedTestBookings}
               </p>
             </div>
 
-            <div className="border border-green-100 rounded-xl p-4">
-              <p className="text-sm text-slate-500">
+            {/* Completed */}
+            <div className="border border-green-100 rounded-lg p-2.5 sm:p-3 bg-green-50/30">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 Completed
               </p>
-              <p className="text-2xl font-bold text-green-600 mt-2">
+              <p className="text-lg sm:text-xl font-bold text-green-600 mt-1">
                 {completedTestBookings}
               </p>
             </div>
+
           </div>
         </div>
         {/* =========================
     RECENT DIAGNOSTIC BOOKINGS
 ========================= */}
-        <div className="mt-6 bg-white border rounded-2xl overflow-hidden">
+        <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
 
           {/* Header */}
           <button
             type="button"
-            onClick={() => setShowDiagnosticBookings(!showDiagnosticBookings)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition"
+            onClick={() =>
+              setShowDiagnosticBookings(!showDiagnosticBookings)
+            }
+            className="
+      w-full
+      px-3 sm:px-4
+      py-2.5 sm:py-3
+      flex items-center justify-between
+      hover:bg-slate-50
+      transition
+    "
           >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">
+            <div className="flex items-center gap-2 min-w-0">
+
+              <span className="text-base sm:text-lg shrink-0">
                 {showDiagnosticBookings ? "➖" : "➕"}
               </span>
 
-              <div className="text-left">
-                <h2 className="text-lg font-bold text-slate-800">
+              <div className="text-left min-w-0">
+
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 truncate">
                   🧪 Recent Diagnostic Bookings
-                  <span className="ml-2 text-sm text-blue-600">
+
+                  <span className="ml-2 text-xs sm:text-sm font-semibold text-blue-600">
                     {testBookings.length}
                   </span>
                 </h2>
 
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 truncate">
                   Latest diagnostic test booking requests
                 </p>
+
               </div>
             </div>
           </button>
 
-          {/* Booking Table */}
+          {/* Booking List */}
           {showDiagnosticBookings && (
-            <div className="border-t overflow-x-auto">
+            <div className="border-t border-slate-200">
 
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="text-left px-4 py-3">Patient</th>
-                    <th className="text-left px-4 py-3">Mobile</th>
-                    <th className="text-left px-4 py-3">Age / Gender</th>
-                    <th className="text-left px-4 py-3">Test Date</th>
-                    <th className="text-left px-4 py-3">Collection</th>
-                    <th className="text-left px-4 py-3">Status</th>
-                  </tr>
-                </thead>
+              {/* =========================
+          DESKTOP / TABLET
+      ========================== */}
+              <div className="hidden sm:block overflow-x-auto">
 
-                <tbody>
-                  {testBookings.length === 0 ? (
+                <table className="w-full text-xs md:text-sm">
+
+                  <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="px-4 py-8 text-center text-slate-500"
-                      >
-                        No diagnostic test bookings found.
-                      </td>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Patient
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Mobile
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Age / Gender
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Test Date
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Collection
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Status
+                      </th>
+
+                      <th className="text-left px-3 py-2 font-semibold">
+                        Action
+                      </th>
+
                     </tr>
-                  ) : (
-                    testBookings.slice(0, 10).map(
-                      (booking: any, index: number) => (
-                        <tr
-                          key={booking.id}
-                          className="border-b last:border-b-0 hover:bg-slate-50"
+                  </thead>
+
+                  <tbody>
+
+                    {testBookings.length === 0 ? (
+
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-3 py-6 text-center text-slate-500"
                         >
-                          {/* Patient */}
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-slate-800">
+                          No diagnostic test bookings found.
+                        </td>
+                      </tr>
+
+                    ) : (
+
+                      testBookings.slice(0, 10).map(
+                        (booking: any) => (
+
+                          <tr
+                            key={booking.id}
+                            className="
+                      border-b
+                      last:border-b-0
+                      border-slate-100
+                      hover:bg-slate-50
+                      transition
+                    "
+                          >
+
+                            {/* Patient */}
+                            <td className="px-3 py-2">
+
+                              <p className="font-semibold text-slate-800">
+                                {booking.patientName || "N/A"}
+                              </p>
+
+                              <p className="text-[10px] text-slate-400">
+                                ID: {booking.sebaloyBookingId || "N/A"}
+                              </p>
+
+                            </td>
+
+                            {/* Mobile */}
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {booking.mobile || "N/A"}
+                            </td>
+
+                            {/* Age / Gender */}
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {booking.age || "N/A"}
+                              {booking.gender
+                                ? ` / ${booking.gender}`
+                                : ""}
+                            </td>
+
+                            {/* Test Date */}
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {booking.bookingDate || "N/A"}
+                            </td>
+
+                            {/* Collection */}
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {booking.homeCollection
+                                ? "🏠 Home"
+                                : "🏥 Laboratory"}
+                            </td>
+
+                            {/* Status */}
+                            <td className="px-3 py-2">
+
+                              <select
+                                value={booking.status || "pending"}
+                                onChange={(e) =>
+                                  updateTestBookingStatus(
+                                    booking.id,
+                                    e.target.value
+                                  )
+                                }
+                                className={`
+                          px-2 py-1
+                          rounded-lg
+                          text-[11px]
+                          font-semibold
+                          border
+                          cursor-pointer
+                          outline-none
+
+                          ${booking.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                    : booking.status === "confirmed"
+                                      ? "bg-blue-100 text-blue-700 border-blue-200"
+                                      : booking.status === "completed"
+                                        ? "bg-green-100 text-green-700 border-green-200"
+                                        : "bg-slate-100 text-slate-700 border-slate-200"
+                                  }
+                        `}
+                              >
+                                <option value="pending">
+                                  Pending
+                                </option>
+
+                                <option value="confirmed">
+                                  Confirmed
+                                </option>
+
+                                <option value="completed">
+                                  Completed
+                                </option>
+                              </select>
+
+                            </td>
+
+                            {/* Delete */}
+                            <td className="px-3 py-2">
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  deleteTestBooking(booking.id)
+                                }
+                                className="
+                          px-2.5 py-1
+                          rounded-lg
+                          bg-red-100
+                          text-red-700
+                          hover:bg-red-200
+                          text-[11px]
+                          font-semibold
+                          transition
+                        "
+                              >
+                                🗑️ Delete
+                              </button>
+
+                            </td>
+
+                          </tr>
+
+                        )
+                      )
+
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+              {/* =========================
+          MOBILE
+      ========================== */}
+              <div className="sm:hidden divide-y divide-slate-100">
+
+                {testBookings.length === 0 ? (
+
+                  <div className="px-3 py-6 text-center text-xs text-slate-500">
+                    No diagnostic test bookings found.
+                  </div>
+
+                ) : (
+
+                  testBookings.slice(0, 10).map(
+                    (booking: any) => (
+
+                      <div
+                        key={booking.id}
+                        className="
+                  px-3 py-2.5
+                  bg-white
+                  hover:bg-slate-50
+                  transition
+                "
+                      >
+
+                        {/* Patient + Status */}
+                        <div className="flex items-start justify-between gap-2">
+
+                          <div className="min-w-0 flex-1">
+
+                            <p className="text-sm font-semibold text-slate-800 truncate">
                               {booking.patientName || "N/A"}
                             </p>
-                            <p className="text-xs text-slate-400">
-                              Sebaloy ID: {booking.sebaloyBookingId || "N/A"}
+
+                            <p className="text-[9px] text-slate-400 truncate">
+                              ID: {booking.sebaloyBookingId || "N/A"}
                             </p>
-                          </td>
 
-                          {/* Mobile */}
-                          <td className="px-4 py-3">
-                            {booking.mobile || "N/A"}
-                          </td>
+                          </div>
 
-                          {/* Age / Gender */}
-                          <td className="px-4 py-3">
-                            {booking.age || "N/A"}
+                          <select
+                            value={booking.status || "pending"}
+                            onChange={(e) =>
+                              updateTestBookingStatus(
+                                booking.id,
+                                e.target.value
+                              )
+                            }
+                            className={`
+                      shrink-0
+                      px-2 py-1
+                      rounded-lg
+                      text-[10px]
+                      font-semibold
+                      border
+                      outline-none
+
+                      ${booking.status === "pending"
+                                ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+                                : booking.status === "confirmed"
+                                  ? "bg-blue-100 text-blue-700 border-blue-200"
+                                  : booking.status === "completed"
+                                    ? "bg-green-100 text-green-700 border-green-200"
+                                    : "bg-slate-100 text-slate-700 border-slate-200"
+                              }
+                    `}
+                          >
+                            <option value="pending">
+                              Pending
+                            </option>
+
+                            <option value="confirmed">
+                              Confirmed
+                            </option>
+
+                            <option value="completed">
+                              Completed
+                            </option>
+                          </select>
+
+                        </div>
+
+                        {/* Booking Details */}
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2 text-[10px] text-slate-600">
+
+                          <div className="truncate">
+                            📱 {booking.mobile || "N/A"}
+                          </div>
+
+                          <div className="truncate">
+                            👤 {booking.age || "N/A"}
                             {booking.gender
                               ? ` / ${booking.gender}`
                               : ""}
-                          </td>
+                          </div>
 
-                          {/* Test Date */}
-                          <td className="px-4 py-3">
-                            {booking.bookingDate || "N/A"}
-                          </td>
+                          <div className="truncate">
+                            📅 {booking.bookingDate || "N/A"}
+                          </div>
 
-                          {/* Collection */}
-                          <td className="px-4 py-3">
+                          <div className="truncate">
                             {booking.homeCollection
                               ? "🏠 Home Collection"
                               : "🏥 Laboratory Visit"}
-                          </td>
-                          {/* Status */}
-                          <td className="px-4 py-3">
-                            <select
-                              value={booking.status || "pending"}
-                              onChange={(e) =>
-                                updateTestBookingStatus(
-                                  booking.id,
-                                  e.target.value
-                                )
-                              }
-                              className={`px-3 py-2 rounded-lg text-sm font-semibold border cursor-pointer outline-none
-      ${booking.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                  : booking.status === "confirmed"
-                                    ? "bg-blue-100 text-blue-700 border-blue-200"
-                                    : booking.status === "completed"
-                                      ? "bg-green-100 text-green-700 border-green-200"
-                                      : "bg-slate-100 text-slate-700 border-slate-200"
-                                }`}
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="confirmed">Confirmed</option>
-                              <option value="completed">Completed</option>
-                            </select>
-                          </td>
-                          <td className="px-4 py-3">
-                            <button
-                              type="button"
-                              onClick={() => deleteTestBooking(booking.id)}
-                              className="px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      )
+                          </div>
+
+                        </div>
+
+                        {/* Delete */}
+                        <div className="mt-2 flex justify-end">
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              deleteTestBooking(booking.id)
+                            }
+                            className="
+                      px-2.5 py-1
+                      rounded-lg
+                      bg-red-100
+                      text-red-700
+                      hover:bg-red-200
+                      text-[10px]
+                      font-semibold
+                      transition
+                    "
+                          >
+                            🗑️ Delete
+                          </button>
+
+                        </div>
+
+                      </div>
+
                     )
-                  )}
-                </tbody>
-              </table>
+                  )
+
+                )}
+
+              </div>
 
             </div>
           )}
-        </div>
 
+        </div>
         {/* Recent Orders */}
         <RecentOrders orders={recentOrders} />
         {/* CSV Import */}
