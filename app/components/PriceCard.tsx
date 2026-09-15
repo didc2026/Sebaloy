@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 
@@ -39,147 +40,195 @@ export default function PriceCard({ product }: Props) {
   const isMedicine = categoryKey === "medicine";
 
   /*
-   * CATEGORY-AWARE UNIT OPTIONS
+   * UNIT SOURCE OF TRUTH
    *
-   * Medicine:
-   * - Keep explicitly configured unitOptions.
-   * - Automatically add Strip when strip data exists.
-   * - Automatically add Box when box data/stripsPerBox exists.
-   * - Keep Vial isolated for vial products.
-   *
-   * Medical Device:
-   * - Always Piece; Medicine units must never leak here.
-   *
-   * Other categories:
-   * - Do not inherit Medicine's Strip/Box units.
+   * Product View decides which units are actually available.
+   * - Explicit product.unitOptions are authoritative.
+   * - Otherwise use product.unitType / selectedUnit.
+   * - Medicine keeps its existing Strip / Box / Vial detection.
+   * - No generic category may invent Bottle / Piece when the product
+   *   itself does not provide that unit.
    */
   const getUnitOptions = (): string[] => {
-    if (categoryKey === "medicaldevice" || categoryKey === "medicaldevices") {
-      return ["Piece"];
-    }
-
-    if (
-      categoryKey === "healthcare" ||
-      categoryKey === "babymomcare" ||
-      categoryKey === "babymom"
-    ) {
-      return product.unitType
-        ? [String(product.unitType)]
-        : ["Bottle"];
-    }
-
-    if (categoryKey === "personalcare") {
-      return product.unitType
-        ? [String(product.unitType)]
-        : ["Piece"];
-    }
-
-    if (!isMedicine) {
-      return product.unitType ? [String(product.unitType)] : [];
-    }
-
-    if (isVialProduct) {
-      return ["Vial"];
-    }
-
     const explicitOptions = Array.isArray(product.unitOptions)
       ? product.unitOptions
           .map((unit: unknown) => String(unit).trim())
           .filter(Boolean)
       : [];
 
-    const options = [...explicitOptions];
-
-    const hasStripData =
-      product.stripPrice !== undefined ||
-      product.tabletsPerStrip !== undefined ||
-      String(product.unitType ?? "").toLowerCase() === "strip";
-
-    const hasBoxData =
-      product.boxPrice !== undefined ||
-      Number(product.stripsPerBox ?? 0) > 0 ||
-      String(product.unitType ?? "").toLowerCase() === "box";
-
-    if (hasStripData) {
-      options.push("Strip");
+    // Explicit units saved on the product are always authoritative.
+    if (explicitOptions.length > 0) {
+      return Array.from(new Set(explicitOptions));
     }
 
-    if (hasBoxData) {
-      options.push("Box");
+    if (isVialProduct) {
+      return ["Vial"];
+    }
+
+    if (isMedicine) {
+      const options: string[] = [];
+      const unitType = String(product.unitType ?? "").trim().toLowerCase();
+      const selected = String(product.selectedUnit ?? "").trim().toLowerCase();
+
+      if (
+        product.vialPrice !== undefined ||
+        product.vialSize !== undefined ||
+        unitType === "vial" ||
+        selected === "vial"
+      ) {
+        options.push("Vial");
+      }
+
+      if (
+        product.stripPrice !== undefined ||
+        product.tabletsPerStrip !== undefined ||
+        unitType === "strip" ||
+        selected === "strip"
+      ) {
+        options.push("Strip");
+      }
+
+      if (
+        product.boxPrice !== undefined ||
+        product.stripsPerBox !== undefined ||
+        unitType === "box" ||
+        selected === "box"
+      ) {
+        options.push("Box");
+      }
+
+      if (options.length === 0) {
+        const fallback =
+          String(product.selectedUnit ?? "").trim() ||
+          String(product.unitType ?? "").trim();
+
+        if (fallback && fallback.toLowerCase() !== "medicine") {
+          options.push(fallback);
+        }
+      }
+
+      return Array.from(new Set(options));
     }
 
     /*
-     * Fallback for older Medicine records:
-     * If no packaging fields exist but unitType is present, preserve it.
+     * Non-medicine products use the product's actual unit.
+     * Do NOT create Bottle/Piece from the category.
      */
-    if (options.length === 0 && product.unitType) {
-      options.push(String(product.unitType));
+    const categoryValue = String(product.category ?? "").trim().toLowerCase();
+    const categoryNormalized = categoryValue.replace(/[^a-z0-9]+/g, "");
+
+    const candidates = [
+      product.selectedUnit,
+      product.unitType,
+      product.sellingUnit,
+      product.packType,
+      product.packagingUnit,
+    ];
+
+    for (const candidate of candidates) {
+      const value = String(candidate ?? "").trim();
+      const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+      if (
+        value &&
+        normalized !== categoryNormalized &&
+        normalized !== "medicine" &&
+        normalized !== "personalcare" &&
+        normalized !== "healthcare" &&
+        normalized !== "babymomcare" &&
+        normalized !== "medicaldevice" &&
+        normalized !== "medicaldevices"
+      ) {
+        return [value];
+      }
     }
 
-    return Array.from(new Set(options));
+    return [];
   };
 
   const unitOptions = getUnitOptions();
 
-  /*
-   * Default selected unit:
-   * - Medical Device -> Piece
-   * - Vial -> Vial
-   * - Medicine -> explicitly selected/unitType first, otherwise first
-   *   valid option. This keeps existing products stable while allowing
-   *   Box to appear automatically.
-   */
   const getSelectedUnit = (): string | undefined => {
-    if (categoryKey === "medicaldevice" || categoryKey === "medicaldevices") {
-      return "Piece";
+    const current = String(product.selectedUnit ?? "").trim();
+
+    if (
+      current &&
+      unitOptions.some(
+        (unit) => unit.toLowerCase() === current.toLowerCase()
+      )
+    ) {
+      return unitOptions.find(
+        (unit) => unit.toLowerCase() === current.toLowerCase()
+      );
+    }
+
+    const currentUnitType = String(product.unitType ?? "").trim();
+
+    if (
+      currentUnitType &&
+      unitOptions.some(
+        (unit) => unit.toLowerCase() === currentUnitType.toLowerCase()
+      )
+    ) {
+      return unitOptions.find(
+        (unit) => unit.toLowerCase() === currentUnitType.toLowerCase()
+      );
+    }
+
+    return unitOptions[0] || undefined;
+  };
+
+  const [selectedUnit, setSelectedUnit] = useState<string | undefined>(
+    () => getSelectedUnit()
+  );
+
+  useEffect(() => {
+    setSelectedUnit(getSelectedUnit());
+    // Reset only when the actual product changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
+  const getUnitBasePrice = (unit?: string) => {
+    const lower = String(unit ?? "").trim().toLowerCase();
+
+    if (isMedicine && lower === "vial") {
+      return Math.round(Number(product.vialPrice ?? product.price ?? 0));
+    }
+
+    if (isMedicine && lower === "box") {
+      return Math.round(
+        Number(
+          product.boxPrice ??
+            Number(product.stripPrice ?? product.price ?? 0) *
+              Number(product.stripsPerBox || 1)
+        )
+      );
+    }
+
+    if (isMedicine && lower === "strip") {
+      return Math.round(Number(product.stripPrice ?? product.price ?? 0));
     }
 
     if (isVialProduct) {
-      return "Vial";
+      return Math.round(Number(product.vialPrice ?? product.price ?? 0));
     }
 
-    if (isMedicine) {
-      const current = String(product.selectedUnit ?? "").trim();
-
-      if (
-        current &&
-        unitOptions.some(
-          (unit) => unit.toLowerCase() === current.toLowerCase()
-        )
-      ) {
-        return current;
-      }
-
-      const currentUnitType = String(product.unitType ?? "").trim();
-
-      if (
-        currentUnitType &&
-        unitOptions.some(
-          (unit) => unit.toLowerCase() === currentUnitType.toLowerCase()
-        )
-      ) {
-        return currentUnitType;
-      }
-
-      return unitOptions[0] || undefined;
-    }
-
-    return product.unitType || unitOptions[0] || undefined;
+    return Math.round(Number(product.price ?? 0));
   };
 
-  const selectedUnit = getSelectedUnit();
-
-  const vialPrice = Math.round(
-    Number(product.vialPrice ?? product.price ?? 0)
-  );
-
-  const normalPrice = Math.round(Number(product.price ?? 0));
-
-  const basePrice = isVialProduct ? vialPrice : normalPrice;
+  const basePrice = getUnitBasePrice(selectedUnit);
 
   const finalPrice = Math.round(
     basePrice - (basePrice * Number(product.discount || 0)) / 100
   );
+
+  const getOptionPrice = (unit: string) => {
+    const unitPrice = getUnitBasePrice(unit);
+
+    return Math.round(
+      unitPrice - (unitPrice * Number(product.discount || 0)) / 100
+    );
+  };
 
   const vialSize =
     product.vialSize ||
@@ -203,7 +252,7 @@ export default function PriceCard({ product }: Props) {
 
       packSize: product.packSize,
       packType: isVialProduct ? "Vial" : product.packType,
-      unitType: isVialProduct ? "Vial" : product.unitType,
+      unitType: selectedUnit ?? product.unitType,
 
       company: product.company,
       category: product.category,
@@ -228,13 +277,12 @@ export default function PriceCard({ product }: Props) {
           ? Number(product.boxPrice)
           : undefined,
 
-      vialPrice: isVialProduct ? vialPrice : undefined,
+      vialPrice: isVialProduct ? Number(product.vialPrice ?? product.price ?? 0) : undefined,
       vialSize: isVialProduct ? vialSize : undefined,
 
       /*
-       * THIS IS THE IMPORTANT FIX:
-       * Medicine products with stripsPerBox/boxPrice now carry both
-       * Strip and Box into the Cart instead of only product.unitType.
+       * Product View is the source of truth for Unit.
+       * Cart receives exactly the units shown here and the selected one.
        */
       unitOptions,
       selectedUnit,
@@ -278,65 +326,110 @@ export default function PriceCard({ product }: Props) {
         )}
       </div>
 
-      {/* VIAL */}
-      {isVialProduct && (
+      {/* PRODUCT UNIT */}
+      {(isVialProduct || isMedicine) && (
         <div className="space-y-2 border-t border-slate-200 pt-3">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-            <span className="font-semibold text-slate-700">
-              Pack Size
-            </span>
-            <span className="text-slate-600 text-left sm:text-right">
-              {vialSize}
-            </span>
-          </div>
+          {isVialProduct && (
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
+              <span className="font-semibold text-slate-700">
+                Pack Size
+              </span>
+              <span className="text-slate-600 text-left sm:text-right">
+                {vialSize}
+              </span>
+            </div>
+          )}
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-            <span className="font-semibold text-slate-700">
-              Available Units
-            </span>
-            <span className="text-slate-600">Vial</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-            <span className="font-semibold text-slate-700">
-              Selling Unit
-            </span>
-            <span className="font-semibold text-blue-600">
-              Vial
-            </span>
-          </div>
+          {isMedicine && !isVialProduct && (
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
+              <span className="font-semibold text-slate-700">
+                Pack Size
+              </span>
+              <span className="text-slate-600 text-left sm:text-right">
+                {product.stripsPerBox ?? 1} ×{" "}
+                {product.tabletsPerStrip ?? 1} Tablets
+              </span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* STRIP / BOX MEDICINE */}
-      {isMedicine && !isVialProduct && (
-        <div className="space-y-2 border-t border-slate-200 pt-3">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-            <span className="font-semibold text-slate-700">
-              Pack Size
-            </span>
-            <span className="text-slate-600 text-left sm:text-right">
-              {product.stripsPerBox ?? 1} ×{" "}
-              {product.tabletsPerStrip ?? 1} Tablets
-            </span>
-          </div>
-
+      {unitOptions.length > 0 && (
+        <div className="space-y-2.5 border-t border-slate-200 pt-3">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
             <span className="font-semibold text-slate-700">
               Available Units
             </span>
-            <span className="text-slate-600">
-              {unitOptions.length > 0 ? unitOptions.join(" / ") : "—"}
+            <span className="text-slate-600 text-left sm:text-right break-words">
+              {unitOptions.join(" / ")}
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-3">
-            <span className="font-semibold text-slate-700">
-              Selling Unit
-            </span>
-            <span className="text-slate-600">
-              {selectedUnit || "—"}
-            </span>
+          <div>
+            <p className="font-semibold text-slate-700 mb-2.5">
+              Select Unit
+            </p>
+
+            <div className="space-y-2.5">
+              {unitOptions.map((unit) => {
+                const lower = unit.toLowerCase();
+                const active =
+                  String(selectedUnit ?? "").toLowerCase() === lower;
+
+                const detail =
+                  isMedicine && lower === "vial"
+                    ? (product.vialSize || product.size || product.packSize || "")
+                    : isMedicine && lower === "strip"
+                      ? Number(product.tabletsPerStrip || 0) > 0
+                        ? `${Number(product.tabletsPerStrip)} Tablets`
+                        : ""
+                      : isMedicine && lower === "box"
+                        ? Number(product.stripsPerBox || 0) > 0
+                          ? `${Number(product.stripsPerBox)} Strips`
+                          : ""
+                        : "";
+
+                return (
+                  <button
+                    key={unit}
+                    type="button"
+                    onClick={() => setSelectedUnit(unit)}
+                    className={`w-full flex items-center justify-between gap-3 border rounded-xl px-3 sm:px-4 py-3 transition ${
+                      active
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <span
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                          active ? "border-blue-600" : "border-gray-400"
+                        }`}
+                      >
+                        {active && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                        )}
+                      </span>
+
+                      <div className="text-left min-w-0">
+                        <p className="font-semibold break-words">
+                          1 {unit}
+                        </p>
+                        {detail && (
+                          <p className="text-sm text-gray-500 break-words">
+                            {detail}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="font-bold text-green-600 shrink-0">
+                      ৳ {getOptionPrice(unit)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -28,28 +28,22 @@ export default function CartPage() {
     normalizeCategory(item.category) === "medicine";
 
   const getUnitOptions = (item: any): string[] => {
+    const explicit = Array.isArray(item.unitOptions)
+      ? item.unitOptions.map(normalizeUnit).filter(Boolean)
+      : [];
+
+    // Product View is the source of truth.
+    if (explicit.length > 0) {
+      return Array.from(new Set(explicit));
+    }
+
     const category = normalizeCategory(item.category);
 
     if (category === "medicaldevice" || category === "medicaldevices") {
       return ["Piece"];
     }
 
-    if (
-      category === "healthcare" ||
-      category === "babymomcare" ||
-      category === "babymom" ||
-      category === "personalcare"
-    ) {
-      return ["Bottle", "Piece"];
-    }
-
     if (isMedicine(item)) {
-      const explicit = Array.isArray(item.unitOptions)
-        ? item.unitOptions.map(normalizeUnit).filter(Boolean)
-        : [];
-
-      if (explicit.length > 0) return Array.from(new Set(explicit));
-
       const options: string[] = [];
       const unitType = normalizeUnit(item.unitType).toLowerCase();
       const selected = normalizeUnit(item.selectedUnit).toLowerCase();
@@ -59,36 +53,41 @@ export default function CartPage() {
         item.vialPrice !== undefined ||
         unitType === "vial" ||
         selected === "vial"
-      ) options.push("Vial");
+      ) {
+        options.push("Vial");
+      }
 
       if (
         item.stripPrice !== undefined ||
         item.tabletsPerStrip !== undefined ||
         unitType === "strip" ||
         selected === "strip"
-      ) options.push("Strip");
+      ) {
+        options.push("Strip");
+      }
 
       if (
         item.boxPrice !== undefined ||
         item.stripsPerBox !== undefined ||
         unitType === "box" ||
         selected === "box"
-      ) options.push("Box");
+      ) {
+        options.push("Box");
+      }
+
+      if (options.length === 0) {
+        const fallback = normalizeUnit(item.unitType) || normalizeUnit(item.selectedUnit);
+        if (fallback) options.push(fallback);
+      }
 
       return Array.from(new Set(options));
     }
 
     const unitType = normalizeUnit(item.unitType);
-    if (
-      unitType &&
-      !["medicine", "strip", "box", "vial"].includes(unitType.toLowerCase())
-    ) return [unitType];
+    if (unitType) return [unitType];
 
     const selected = normalizeUnit(item.selectedUnit);
-    if (
-      selected &&
-      !["strip", "box", "vial"].includes(selected.toLowerCase())
-    ) return [selected];
+    if (selected) return [selected];
 
     return [];
   };
@@ -296,7 +295,7 @@ export default function CartPage() {
                           <button
                             key={unit}
                             type="button"
-                            onClick={() => updateCartItemUnit(item.id, unit)}
+                            onClick={() => updateCartItemUnit(item.id, selectedUnit, unit)}
                             className={`w-full flex items-center justify-between gap-3 border rounded-xl px-3 sm:px-4 py-3 transition ${
                               active
                                 ? "border-blue-500 bg-blue-50"
@@ -346,7 +345,7 @@ export default function CartPage() {
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => decreaseQuantity(item.id)}
+                      onClick={() => decreaseQuantity(item.id, selectedUnit)}
                       aria-label={`Decrease ${item.name} quantity`}
                       className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 font-bold text-xl hover:bg-slate-200"
                     >
@@ -358,7 +357,7 @@ export default function CartPage() {
                     </span>
 
                     <button
-                      onClick={() => increaseQuantity(item.id)}
+                      onClick={() => increaseQuantity(item.id, selectedUnit)}
                       aria-label={`Increase ${item.name} quantity`}
                       className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 font-bold text-xl hover:bg-slate-200"
                     >
@@ -398,7 +397,7 @@ export default function CartPage() {
                 </div>
 
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.id, selectedUnit)}
                   className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-semibold"
                 >
                   Remove

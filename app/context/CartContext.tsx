@@ -42,11 +42,15 @@ export interface CartItem {
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
+  removeFromCart: (id: string, unit?: ProductUnit) => void;
   clearCart: () => void;
-  increaseQuantity: (id: string) => void;
-  decreaseQuantity: (id: string) => void;
-  updateCartItemUnit: (id: string, unit: ProductUnit) => void;
+  increaseQuantity: (id: string, unit?: ProductUnit) => void;
+  decreaseQuantity: (id: string, unit?: ProductUnit) => void;
+  updateCartItemUnit: (
+    id: string,
+    currentUnit: ProductUnit,
+    unit: ProductUnit
+  ) => void;
   cartCount: number;
 }
 
@@ -64,83 +68,41 @@ function normalizeCategory(value: unknown): string {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-function getAuthoritativeCategoryUnits(item: CartItem): string[] | null {
-  const category = normalizeCategory(item.category);
-
-  if (category === "medicaldevice" || category === "medicaldevices") {
-    return ["Piece"];
-  }
-
-  if (
-    category === "healthcare" ||
-    category === "babymomcare" ||
-    category === "babymom" ||
-    category === "personalcare"
-  ) {
-    return ["Bottle", "Piece"];
-  }
-
-  return null;
-}
-
 function getUnitOptions(item: CartItem): string[] {
-  const authoritative = getAuthoritativeCategoryUnits(item);
-
-  // Non-medicine categories are never allowed to inherit Medicine units.
-  if (authoritative) return authoritative;
-
-  const category = normalizeCategory(item.category);
   const explicitOptions = Array.isArray(item.unitOptions)
     ? item.unitOptions.map(normalizeUnit).filter(Boolean)
     : [];
 
-  if (category === "medicine") {
-    if (explicitOptions.length > 0) {
-      return Array.from(new Set(explicitOptions));
-    }
-
-    const unitType = normalizeUnit(item.unitType).toLowerCase();
-    const selectedUnit = normalizeUnit(item.selectedUnit).toLowerCase();
-    const options: string[] = [];
-
-    if (
-      normalizeUnit(item.vialSize) ||
-      item.vialPrice !== undefined ||
-      unitType === "vial" ||
-      selectedUnit === "vial"
-    ) options.push("Vial");
-
-    if (
-      item.stripPrice !== undefined ||
-      item.tabletsPerStrip !== undefined ||
-      unitType === "strip" ||
-      selectedUnit === "strip"
-    ) options.push("Strip");
-
-    if (
-      item.boxPrice !== undefined ||
-      item.stripsPerBox !== undefined ||
-      unitType === "box" ||
-      selectedUnit === "box"
-    ) options.push("Box");
-
-    return Array.from(new Set(options));
+  // Product View is the source of truth whenever it supplied explicit units.
+  if (explicitOptions.length > 0) {
+    return Array.from(new Set(explicitOptions));
   }
+
+  /*
+   * Legacy/single-unit cart items keep only their actual unit.
+   * Never invent Bottle/Piece from the category.
+   */
+  const selectedUnit = normalizeUnit(item.selectedUnit);
+  if (selectedUnit) return [selectedUnit];
 
   const unitType = normalizeUnit(item.unitType);
-  if (
-    unitType &&
-    !["medicine", "strip", "box", "vial"].includes(unitType.toLowerCase())
-  ) {
-    return [unitType];
-  }
+  if (unitType) {
+    const category = normalizeCategory(item.category);
+    const normalizedUnitType = unitType
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
 
-  const selectedUnit = normalizeUnit(item.selectedUnit);
-  if (
-    selectedUnit &&
-    !["strip", "box", "vial"].includes(selectedUnit.toLowerCase())
-  ) {
-    return [selectedUnit];
+    if (
+      normalizedUnitType !== category &&
+      normalizedUnitType !== "medicine" &&
+      normalizedUnitType !== "personalcare" &&
+      normalizedUnitType !== "healthcare" &&
+      normalizedUnitType !== "babymomcare" &&
+      normalizedUnitType !== "medicaldevice" &&
+      normalizedUnitType !== "medicaldevices"
+    ) {
+      return [unitType];
+    }
   }
 
   return [];
@@ -166,12 +128,30 @@ function normalizeCartItem(item: CartItem): CartItem {
   const unitOptions = getUnitOptions(item);
   const selectedUnit = getDefaultUnit(item);
 
+  const normalizedUnitType = normalizeUnit(item.unitType);
+  const category = normalizeCategory(item.category);
+  const normalizedUnitTypeKey = normalizedUnitType
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+  const safeUnitType =
+    normalizedUnitType &&
+    normalizedUnitTypeKey !== category &&
+    normalizedUnitTypeKey !== "medicine" &&
+    normalizedUnitTypeKey !== "personalcare" &&
+    normalizedUnitTypeKey !== "healthcare" &&
+    normalizedUnitTypeKey !== "babymomcare" &&
+    normalizedUnitTypeKey !== "medicaldevice" &&
+    normalizedUnitTypeKey !== "medicaldevices"
+      ? normalizedUnitType
+      : undefined;
+
   return {
     ...item,
-    unitOptions: unitOptions.length > 0 ? unitOptions : item.unitOptions,
+    unitOptions: unitOptions.length > 0 ? unitOptions : undefined,
     quantity: Math.max(1, Number(item.quantity) || 1),
     selectedUnit,
-    unitType: selectedUnit ?? item.unitType,
+    unitType: selectedUnit ?? safeUnitType,
   };
 }
 
@@ -230,25 +210,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const matchesCartItem = (
+    item: CartItem,
+    id: string,
+    unit?: ProductUnit
+  ) => {
+    if (item.id !== id) return false;
+
+    if (unit === undefined) return true;
+
+    const itemUnit = normalizeUnit(item.selectedUnit ?? item.unitType);
+    return itemUnit.toLowerCase() === normalizeUnit(unit).toLowerCase();
   };
 
-  const increaseQuantity = (id: string) => {
+  const removeFromCart = (id: string, unit?: ProductUnit) => {
+    setCartItems((prev) =>
+      prev.filter((item) => !matchesCartItem(item, id, unit))
+    );
+  };
+
+  const increaseQuantity = (id: string, unit?: ProductUnit) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id
+        matchesCartItem(item, id, unit)
           ? { ...item, quantity: item.quantity + 1 }
           : item
       )
     );
   };
 
-  const decreaseQuantity = (id: string) => {
+  const decreaseQuantity = (id: string, unit?: ProductUnit) => {
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item.id === id
+          matchesCartItem(item, id, unit)
             ? { ...item, quantity: item.quantity - 1 }
             : item
         )
@@ -256,18 +251,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const updateCartItemUnit = (id: string, unit: ProductUnit) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
+  const updateCartItemUnit = (
+    id: string,
+    currentUnit: ProductUnit,
+    unit: ProductUnit
+  ) => {
+    const targetUnit = normalizeUnit(unit);
+
+    setCartItems((prev) => {
+      const currentIndex = prev.findIndex((item) =>
+        matchesCartItem(item, id, currentUnit)
+      );
+
+      if (currentIndex === -1) return prev;
+
+      const existingTargetIndex = prev.findIndex(
+        (item, index) =>
+          index !== currentIndex &&
+          item.id === id &&
+          normalizeUnit(item.selectedUnit ?? item.unitType).toLowerCase() ===
+            targetUnit.toLowerCase()
+      );
+
+      if (existingTargetIndex !== -1) {
+        return prev
+          .map((item, index) =>
+            index === existingTargetIndex
+              ? {
+                  ...item,
+                  quantity:
+                    item.quantity + prev[currentIndex].quantity,
+                }
+              : item
+          )
+          .filter((_, index) => index !== currentIndex);
+      }
+
+      return prev.map((item, index) =>
+        index === currentIndex
           ? {
               ...item,
-              selectedUnit: unit,
-              unitType: unit,
+              selectedUnit: targetUnit,
+              unitType: targetUnit,
             }
           : item
-      )
-    );
+      );
+    });
   };
 
   const clearCart = () => {
