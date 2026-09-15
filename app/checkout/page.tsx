@@ -35,22 +35,65 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
 
+  const normalizeUnit = (value: unknown) =>
+    String(value ?? "").trim();
+
+  const normalizeCategory = (value: unknown) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+
+  const isMedicine = (item: any) =>
+    normalizeCategory(item.category) === "medicine";
+
+  // Use the same unit/price logic as CartPage.
+  const getCheckoutUnit = (item: any) => {
+    const selected = normalizeUnit(item.selectedUnit);
+    if (selected) return selected;
+
+    const unitType = normalizeUnit(item.unitType);
+    if (unitType) return unitType;
+
+    return "";
+  };
+
+  const getOriginalUnitPrice = (item: any) => {
+    const selected = getCheckoutUnit(item).toLowerCase();
+    let price = Number(item.price ?? 0);
+
+    if (isMedicine(item) && selected === "vial") {
+      price = Number(item.vialPrice ?? item.price ?? 0);
+    } else if (isMedicine(item) && selected === "box") {
+      price = Number(
+        item.boxPrice ??
+          Number(item.stripPrice ?? item.price ?? 0) *
+            Number(item.stripsPerBox || 1)
+      );
+    } else if (isMedicine(item) && selected === "strip") {
+      price = Number(item.stripPrice ?? item.price ?? 0);
+    }
+
+    return Math.round(price);
+  };
+
   const originalTotal = cartItems.reduce(
     (sum, item) =>
-      sum + Math.round(item.price) * item.quantity,
+      sum + getOriginalUnitPrice(item) * item.quantity,
     0
   );
 
   const subtotal = cartItems.reduce(
     (sum, item) => {
-      const discount = item.discount || 0;
+      const discount = Number(item.discount || 0);
+      const originalUnitPrice = getOriginalUnitPrice(item);
 
       const discountPerUnit = Math.round(
-        (item.price * discount) / 100
+        (originalUnitPrice * discount) / 100
       );
 
-      const salePrice =
-        Math.round(item.price) - discountPerUnit;
+      const salePrice = originalUnitPrice - discountPerUnit;
 
       return sum + salePrice * item.quantity;
     },
@@ -190,28 +233,22 @@ export default function CheckoutPage() {
         address,
 
         items: cartItems.map((item) => {
-          const discount = item.discount || 0;
+          const discount = Number(item.discount || 0);
+          const originalUnitPrice = getOriginalUnitPrice(item);
 
           const discountPerUnit = Math.round(
-            (item.price * discount) / 100
+            (originalUnitPrice * discount) / 100
           );
 
-          const salePrice =
-            Math.round(item.price) - discountPerUnit;
+          const salePrice = originalUnitPrice - discountPerUnit;
 
           return {
             id: item.id,
             name: item.name,
-
-            // Original Price
-            price: Math.round(item.price),
-
-            // Discount %
+            selectedUnit: getCheckoutUnit(item),
+            price: originalUnitPrice,
             discount,
-
-            // Selling Price - whole number
             salePrice,
-
             quantity: item.quantity,
           };
         }),
@@ -577,13 +614,20 @@ export default function CheckoutPage() {
           Items
         </p>
 
-        {cartItems.map((item) => (
-          <div key={item.id} className="mb-2">
-            <span>
-              • {item.name} × {item.quantity}
-            </span>
-          </div>
-        ))}
+        {cartItems.map((item) => {
+          const selectedUnit = getCheckoutUnit(item);
+
+          return (
+            <div key={item.id} className="mb-2">
+              <span>
+                • {item.name}
+                {selectedUnit ? ` (${selectedUnit})` : ""}
+                {" × "}
+                {item.quantity}
+              </span>
+            </div>
+          );
+        })}
 
         <div className="mt-4 space-y-2">
           {discountAmount > 0 && (

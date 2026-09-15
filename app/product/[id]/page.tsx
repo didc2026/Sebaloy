@@ -178,9 +178,13 @@ export default function ProductPage() {
                               {item.company}
                             </p>
 
-                            <p className="text-sm text-gray-400">
-                              {item.genericName} {item.strength}
-                            </p>
+                            {(item.genericName?.trim() || item.strength?.trim()) && (
+                              <p className="text-sm text-gray-400">
+                                {item.genericName?.trim()}
+                                {item.genericName?.trim() && item.strength?.trim() ? " " : ""}
+                                {item.strength?.trim()}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -207,9 +211,13 @@ export default function ProductPage() {
               {product.name}
             </h1>
             <div className="mt-2 space-y-1">
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 break-words">
-                {product.genericName} {product.strength}
-              </p>
+              {(product.genericName?.trim() || product.strength?.trim()) && (
+                <p className="text-base sm:text-lg lg:text-xl text-gray-600 break-words">
+                  {product.genericName?.trim()}
+                  {product.genericName?.trim() && product.strength?.trim() ? " " : ""}
+                  {product.strength?.trim()}
+                </p>
+              )}
               {product.size && (
                 <p className="text-base text-gray-500">
                   Size: <span className="font-medium text-gray-700">

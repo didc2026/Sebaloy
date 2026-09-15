@@ -111,7 +111,6 @@ export default function MedicineFields({
           value={strength}
           onChange={(e) => setStrength(e.target.value)}
           className="w-full border p-3 rounded"
-          required
         />
       </div>
 
@@ -129,6 +128,7 @@ export default function MedicineFields({
           className="w-full border p-3 rounded"
         />
       </div>
+
       {/* Brand */}
       <div>
         <label className="block text-sm font-medium mb-2">

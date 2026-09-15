@@ -7,6 +7,13 @@ type Props = {
 };
 
 export default function ProductInfo({ product }: Props) {
+  // Show information only when a real value exists.
+  // Empty strings and whitespace-only values are treated as missing.
+  const hasValue = (value: unknown) =>
+    value !== undefined &&
+    value !== null &&
+    String(value).trim() !== "";
+
   const isVial =
     String(product.unitType ?? "").toLowerCase() === "vial" ||
     String(product.packType ?? "").toLowerCase() === "vial" ||
@@ -239,13 +246,13 @@ export default function ProductInfo({ product }: Props) {
           {/* NORMAL TABLET / STRIP / BOX INFORMATION */}
           {!isVial && (
             <>
-              {(product.stripsPerBox ||
-                product.tabletsPerStrip ||
-                product.unitType) && (
+              {(hasValue(product.stripsPerBox) ||
+                hasValue(product.tabletsPerStrip) ||
+                hasValue(product.unitType)) && (
                 <Accordion title="💊 Pack Information">
                   <div className="space-y-3 text-sm sm:text-base">
 
-                    {product.stripsPerBox && (
+                    {hasValue(product.stripsPerBox) && (
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
                         <span className="font-semibold text-slate-700">
                           Strips Per Box
@@ -257,7 +264,7 @@ export default function ProductInfo({ product }: Props) {
                       </div>
                     )}
 
-                    {product.tabletsPerStrip && (
+                    {hasValue(product.tabletsPerStrip) && (
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-slate-100 pb-2">
                         <span className="font-semibold text-slate-700">
                           Tablets Per Strip
@@ -269,7 +276,7 @@ export default function ProductInfo({ product }: Props) {
                       </div>
                     )}
 
-                    {product.unitType && (
+                    {hasValue(product.unitType) && (
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
                         <span className="font-semibold text-slate-700">
                           Selling Unit
@@ -288,7 +295,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* PHARMACOLOGY */}
-          {product.pharmacology && (
+          {hasValue(product.pharmacology) && (
             <Accordion title="💊 Pharmacology">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.pharmacology}
@@ -297,7 +304,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* INDICATION */}
-          {product.indication && (
+          {hasValue(product.indication) && (
             <Accordion title="🩺 Indication">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.indication}
@@ -306,7 +313,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* DOSAGE */}
-          {product.dosage && (
+          {hasValue(product.dosage) && (
             <Accordion title="💉 Dosage">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.dosage}
@@ -315,7 +322,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* ADMINISTRATION */}
-          {product.administration && (
+          {hasValue(product.administration) && (
             <Accordion title="💊 Administration">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.administration}
@@ -324,7 +331,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* SIDE EFFECTS */}
-          {product.sideEffects && (
+          {hasValue(product.sideEffects) && (
             <Accordion title="⚠️ Side Effects">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.sideEffects}
@@ -333,7 +340,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* PRECAUTIONS */}
-          {product.precautions && (
+          {hasValue(product.precautions) && (
             <Accordion title="🛡️ Precautions">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.precautions}
@@ -342,7 +349,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* PREGNANCY */}
-          {product.pregnancyLactation && (
+          {hasValue(product.pregnancyLactation) && (
             <Accordion title="🤰 Pregnancy & Lactation">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.pregnancyLactation}
@@ -351,7 +358,7 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* DRUG INTERACTION */}
-          {product.drugInteraction && (
+          {hasValue(product.drugInteraction) && (
             <Accordion title="🔄 Drug Interaction">
               <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
                 {product.drugInteraction}
@@ -360,9 +367,11 @@ export default function ProductInfo({ product }: Props) {
           )}
 
           {/* STORAGE */}
-          {product.storageInfo && (
+          {hasValue(product.storageInfo) && (
             <Accordion title="📦 Storage">
-              {product.storageInfo}
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.storageInfo}
+              </div>
             </Accordion>
           )}
         </>
@@ -376,13 +385,17 @@ export default function ProductInfo({ product }: Props) {
         <>
           {product.brand && (
             <Accordion title="🏷️ Brand">
-              {product.brand}
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.brand}
+              </div>
             </Accordion>
           )}
 
           {product.size && (
             <Accordion title="📏 Size">
-              {product.size}
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.size}
+              </div>
             </Accordion>
           )}
 
