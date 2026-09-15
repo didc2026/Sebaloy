@@ -14,17 +14,75 @@ type SearchProduct = {
   id: string;
   name: string;
   company?: string;
-  imageUrl?: string;
-  price: number;
-};
-
-type SearchResult = {
-  id: string;
-  name: string;
-  company?: string;
+  brand?: string;
+  genericName?: string;
+  category?: string;
   imageUrl?: string;
   price?: number;
 };
+
+type SearchResult = SearchProduct;
+
+function normalizeSearchText(value: unknown): string {
+  return String(value ?? "")
+    .toLocaleLowerCase()
+    .normalize("NFKC")
+    .trim();
+}
+
+function getSearchScore(product: SearchProduct, keyword: string): number {
+  /*
+   * Search priority:
+   * 0  = exact product name
+   * 1  = product name starts with keyword
+   * 2  = a word in product name starts with keyword
+   * 3  = exact generic name
+   * 4  = generic name starts with keyword
+   * 5  = a generic-name word starts with keyword
+   * 6  = exact brand
+   * 7  = brand starts with keyword
+   * 8  = a brand word starts with keyword
+   * 9  = exact company
+   * 10 = company starts with keyword
+   * 11 = a company word starts with keyword
+   * 12 = category starts with keyword
+   * 20+ = weaker contains matches
+   *
+   * There is intentionally NO minimum character requirement.
+   * One, two or three characters can return results immediately.
+   */
+  const name = normalizeSearchText(product.name);
+  const genericName = normalizeSearchText(product.genericName);
+  const brand = normalizeSearchText(product.brand);
+  const company = normalizeSearchText(product.company);
+  const category = normalizeSearchText(product.category);
+
+  if (name === keyword) return 0;
+  if (name.startsWith(keyword)) return 1;
+  if (name.split(/\s+/).some((word) => word.startsWith(keyword))) return 2;
+
+  if (genericName === keyword) return 3;
+  if (genericName.startsWith(keyword)) return 4;
+  if (genericName.split(/\s+/).some((word) => word.startsWith(keyword))) return 5;
+
+  if (brand === keyword) return 6;
+  if (brand.startsWith(keyword)) return 7;
+  if (brand.split(/\s+/).some((word) => word.startsWith(keyword))) return 8;
+
+  if (company === keyword) return 9;
+  if (company.startsWith(keyword)) return 10;
+  if (company.split(/\s+/).some((word) => word.startsWith(keyword))) return 11;
+
+  if (category === keyword || category.startsWith(keyword)) return 12;
+
+  if (name.includes(keyword)) return 20;
+  if (genericName.includes(keyword)) return 21;
+  if (brand.includes(keyword)) return 22;
+  if (company.includes(keyword)) return 23;
+  if (category.includes(keyword)) return 24;
+
+  return -1;
+}
 
 export default function Navbar() {
   const { search, setSearch } = useSearch();
@@ -48,10 +106,23 @@ export default function Navbar() {
       try {
         const snapshot = await getDocs(collection(db, "products"));
 
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<SearchProduct, "id">),
-        }));
+        const data = snapshot.docs.map((doc) => {
+          const raw = doc.data() as Omit<SearchProduct, "id">;
+
+          return {
+            id: doc.id,
+            name: String(raw.name ?? "").trim(),
+            company: raw.company,
+            brand: raw.brand,
+            genericName: raw.genericName,
+            category: raw.category,
+            imageUrl: raw.imageUrl,
+            price:
+              raw.price !== undefined && raw.price !== null
+                ? Number(raw.price)
+                : undefined,
+          };
+        });
 
         setProducts(data);
       } catch (error) {
@@ -94,10 +165,10 @@ export default function Navbar() {
   }, []);
 
   /* --------------------------------
-     SEARCH
+     FAST SEARCH
   -------------------------------- */
   useEffect(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword = normalizeSearchText(search);
 
     if (keyword === "") {
       setResults([]);
@@ -105,57 +176,31 @@ export default function Navbar() {
       return;
     }
 
+    // Search is performed against the already-loaded local product list.
+    // No Firestore request is made while the user is typing.
     const filtered = products
-      .map((product) => {
-        const name = product.name.toLowerCase();
-        const company = (product.company || "").toLowerCase();
-
-        let score = -1;
-
-        // 1. Product name starts with keyword
-        if (name.startsWith(keyword)) {
-          score = 1;
-        }
-
-        // 2. Any word in product name starts with keyword
-        else if (
-          name
-            .split(" ")
-            .some((word) => word.startsWith(keyword))
-        ) {
-          score = 2;
-        }
-
-        // 3. Company starts with keyword
-        else if (company.startsWith(keyword)) {
-          score = 3;
-        }
-
-        // 4. Product name contains keyword
-        else if (name.includes(keyword)) {
-          score = 4;
-        }
-
-        // 5. Company contains keyword
-        else if (company.includes(keyword)) {
-          score = 5;
-        }
-
-        return {
-          product,
-          score,
-        };
-      })
+      .map((product) => ({
+        product,
+        score: getSearchScore(product, keyword),
+      }))
       .filter((item) => item.score !== -1)
       .sort((a, b) => {
         if (a.score !== b.score) {
           return a.score - b.score;
         }
 
-        return a.product.name.localeCompare(b.product.name);
+        const aName = normalizeSearchText(a.product.name);
+        const bName = normalizeSearchText(b.product.name);
+
+        // Prefer shorter names when relevance is identical.
+        if (aName.length !== bName.length) {
+          return aName.length - bName.length;
+        }
+
+        return aName.localeCompare(bName);
       })
       .map((item) => item.product)
-      .slice(0, 5);
+      .slice(0, 8);
 
     setResults(filtered);
     setShowResults(filtered.length > 0);
@@ -220,7 +265,9 @@ export default function Navbar() {
                 setShowResults(true);
               }
             }}
-            type="text"
+            type="search"
+            autoComplete="off"
+            spellCheck={false}
             placeholder="🔍 Search medicines, healthcare products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -299,7 +346,10 @@ export default function Navbar() {
                     </h4>
 
                     <p className="text-sm text-slate-500 truncate">
-                      {product.company}
+                      {product.genericName ||
+                        product.brand ||
+                        product.company ||
+                        "Healthcare Product"}
                     </p>
                   </div>
 
