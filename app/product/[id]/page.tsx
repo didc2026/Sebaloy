@@ -10,6 +10,8 @@ import AlternativeBrands from "@/app/components/AlternativeBrands";
 import {
   doc,
   getDoc,
+  increment,
+  updateDoc,
   collection,
   getDocs,
   query,
@@ -30,6 +32,7 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState<any>(null);
   const [alternativeProducts, setAlternativeProducts] = useState<any[]>([]);
+  const [viewCount, setViewCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +51,27 @@ export default function ProductPage() {
           ...docSnap.data(),
         };
 
+        // Count one view per browser session for this product.
+        // A refresh in the same session will not increase the count again.
+        const viewKey = `product-viewed-${id}`;
+        const currentViewCount = Number(data.viewCount || 0);
+
+        if (!sessionStorage.getItem(viewKey)) {
+          try {
+            await updateDoc(docRef, {
+              viewCount: increment(1),
+            });
+            sessionStorage.setItem(viewKey, "1");
+            data.viewCount = currentViewCount + 1;
+          } catch (viewError) {
+            console.error("Failed to update product view count:", viewError);
+            data.viewCount = currentViewCount;
+          }
+        } else {
+          data.viewCount = currentViewCount;
+        }
+
+        setViewCount(Number(data.viewCount || 0));
         setProduct(data);
         if (data.genericName) {
           const allProductsSnapshot = await getDocs(
@@ -235,11 +259,16 @@ export default function ProductPage() {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="text-yellow-500">★★★★★</span>
               <span className="text-gray-500">
                 4.8 (128 Reviews)
               </span>
+              {viewCount > 0 && (
+                <span className="text-sm text-slate-500 inline-flex items-center gap-1">
+                  ↗ {viewCount.toLocaleString()} people viewed this
+                </span>
+              )}
             </div>
             {/* =========================
     MEDICAL DEVICE / IVD INFORMATION
