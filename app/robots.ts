@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://sebaloybd.com/sitemap.xml",
+    sitemap: "https://www.sebaloybd.com/sitemap.xml",
   };
 }

@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import LayoutWrapper from "./components/LayoutWrapper";
 import { SearchProvider } from "./context/SearchContext";
+import OrganizationSchema from "./components/OrganizationSchema";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sebaloybd.com"),
+  metadataBase: new URL("https://www.sebaloybd.com"),
 
   title: {
     default: "Sebaloy | Trusted Online Healthcare Marketplace Bangladesh",
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
     title: "Sebaloy | Trusted Online Healthcare Marketplace",
     description:
       "Buy medicines, healthcare products, baby care and medical devices from Sebaloy.",
-    url: "https://sebaloybd.com",
+    url: "https://www.sebaloybd.com",
     siteName: "Sebaloy",
     locale: "en_US",
     type: "website",
@@ -89,6 +90,8 @@ export default function RootLayout({
             <LayoutWrapper>{children}</LayoutWrapper>
           </SearchProvider>
         </CartProvider>
+
+        <OrganizationSchema />
       </body>
     </html>
   );
