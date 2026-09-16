@@ -48,6 +48,9 @@ type Props = {
 
     specifications: string;
     setSpecifications: (value: string) => void;
+
+    description: string;
+    setDescription: (value: string) => void;
 };
 
 export default function AnimalFeedAdditives({
@@ -98,6 +101,9 @@ export default function AnimalFeedAdditives({
 
     specifications,
     setSpecifications,
+
+    description,
+    setDescription,
 }: Props) {
     return (
         <div className="md:col-span-2 mt-6 p-5 rounded-xl border bg-slate-50">
@@ -169,6 +175,20 @@ export default function AnimalFeedAdditives({
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="Enter manufacturer or company name"
                         className="w-full border border-slate-300 rounded-xl px-4 py-3"
+                    />
+                </div>
+
+                {/* PRODUCT DESCRIPTION */}
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Product Description
+                    </label>
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Enter a clear description of the animal feed additive, its key benefits, intended use, and other important product information"
+                        rows={5}
+                        className="w-full border border-slate-300 rounded-xl px-4 py-3 resize-y"
                     />
                 </div>
 

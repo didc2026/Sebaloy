@@ -20,6 +20,7 @@ import PersonalCareFields from "@/app/components/admin/CategoryFields/PersonalCa
 import MedicalDeviceFields from "../../components/admin/CategoryFields/MedicalDeviceFields";
 import LabTestFields from "@/app/components/admin/CategoryFields/LabTestFields";
 import AnimalFeedAdditives from "../../components/admin/CategoryFields/AnimalFeedAdditives";
+import NutritionFields from "../../components/admin/CategoryFields/NutritionFields";
 import BusinessStats from "../../components/admin/BusinessStats";
 import RecentOrders from "../../components/admin/RecentOrdersTemp";
 import {
@@ -162,8 +163,14 @@ export default function Dashboard() {
   const selectedCategory = categories.find(
     (cat: any) => cat.name === category
   );
+  const normalizedCategoryForType = category
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
+
   const isLabTestCategory =
-    selectedCategory?.name?.toLowerCase().includes("lab test") ||
+    normalizedCategoryForType === "labtest" ||
+    normalizedCategoryForType === "labtests" ||
     selectedCategory?.slug?.toLowerCase().includes("lab-test") ||
     selectedCategory?.id === "lab-test";
   const [products, setProducts] = useState<any[]>([]);
@@ -1057,6 +1064,20 @@ export default function Dashboard() {
     setPregnancyLactation(product.pregnancyLactation || "");
     setDrugInteraction(product.drugInteraction || "");
     setStorageInfo(product.storageInfo || "");
+
+    // =========================
+    // ANIMAL FEED ADDITIVES
+    // =========================
+    setActiveIngredient(product.activeIngredient || "");
+    setActiveContent(product.activeContent || "");
+    setCasNumber(product.casNumber || "");
+    setChemicalFormula(product.chemicalFormula || "");
+    setTargetAnimal(product.targetAnimal || "");
+    setApplicationPurpose(product.applicationPurpose || "");
+    setInclusionRate(product.inclusionRate || "");
+    setPhysicalForm(product.physicalForm || "");
+    setStorageConditions(product.storageConditions || "");
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -1840,6 +1861,8 @@ export default function Dashboard() {
                     setStrength={setStrength}
                     company={company}
                     setCompany={setCompany}
+                    description={description}
+                    setDescription={setDescription}
                   />
 
                 )}
@@ -1853,6 +1876,8 @@ export default function Dashboard() {
                     setStrength={setStrength}
                     company={company}
                     setCompany={setCompany}
+                    description={description}
+                    setDescription={setDescription}
                   />
                 )}
                 {category === "Personal Care" && (
@@ -1881,6 +1906,39 @@ export default function Dashboard() {
                     setIngredients={setIngredients}
                     shelfLife={shelfLife}
                     setShelfLife={setShelfLife}
+                  />
+                )}
+                {/* =========================
+                  NUTRITION
+                ========================== */}
+                {category === "Nutrition" && (
+                  <NutritionFields
+                    brand={brand}
+                    setBrand={setBrand}
+                    company={company}
+                    setCompany={setCompany}
+                    productType={productType}
+                    setProductType={setProductType}
+                    size={size}
+                    setSize={setSize}
+                    strength={strength}
+                    setStrength={setStrength}
+                    keyIngredients={keyIngredients}
+                    setKeyIngredients={setKeyIngredients}
+                    benefits={benefits}
+                    setBenefits={setBenefits}
+                    howToUse={howToUse}
+                    setHowToUse={setHowToUse}
+                    ingredients={ingredients}
+                    setIngredients={setIngredients}
+                    countryOfOrigin={countryOfOrigin}
+                    setCountryOfOrigin={setCountryOfOrigin}
+                    shelfLife={shelfLife}
+                    setShelfLife={setShelfLife}
+                    description={description}
+                    setDescription={setDescription}
+                    specifications={specifications}
+                    setSpecifications={setSpecifications}
                   />
                 )}
                 {/* =========================
@@ -2110,6 +2168,8 @@ export default function Dashboard() {
 
                     specifications={specifications}
                     setSpecifications={setSpecifications}
+                    description={description}
+                    setDescription={setDescription}
                   />
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2128,7 +2188,7 @@ export default function Dashboard() {
                           : ""
                       );
 
-                      // Clear category-specific fields
+                      // Clear shared/category-specific fields
                       setBrand("");
                       setSize("");
                       setStrength("");
@@ -2141,7 +2201,6 @@ export default function Dashboard() {
                       setHowToUse("");
                       setIngredients("");
                       setShelfLife("");
-                      setPreparation("");
 
                       // Clear Medicine-specific fields
                       setGenericName("");
@@ -2158,6 +2217,59 @@ export default function Dashboard() {
                       // Clear packaging fields
                       setStripsPerBox("");
                       setTabletsPerStrip("");
+
+                      // Clear Animal Feed Additives fields
+                      setActiveIngredient("");
+                      setActiveContent("");
+                      setCasNumber("");
+                      setChemicalFormula("");
+                      setTargetAnimal("");
+                      setApplicationPurpose("");
+                      setInclusionRate("");
+                      setPhysicalForm("");
+                      setStorageConditions("");
+
+                      // Clear Lab Test fields
+                      setTestName("");
+                      setShortName("");
+                      setTestCategory("");
+                      setTestCode("");
+                      setClinicalSpecialty("");
+                      setTargetDiseaseCondition("");
+                      setSampleType("");
+                      setSpecimen("");
+                      setSampleVolume("");
+                      setSampleCollectionInstructions("");
+                      setSampleStabilityHandling("");
+                      setFastingRequirement("");
+                      setTestMethod("");
+                      setTestPrinciple("");
+                      setTestingPlatformAnalyzer("");
+                      setReferenceRangeCutoff("");
+                      setUnit("");
+                      setResultType("");
+                      setTurnaroundTime("");
+                      setHomeSampleCollection("");
+                      setSampleCollectionSchedule("");
+                      setSpecialInstructions("");
+                      setReportDelivery("");
+                      setPartnerLaboratory("");
+                      setBranchLocation("");
+                      setPartnerLabTestCode("");
+                      setPartnerLabPrice("");
+                      setSebaloySellingPrice("");
+                      setHomeCollectionCharge("");
+                      setDiscountPromotionalPrice("");
+                      setWhyThisTest("");
+                      setWhenRecommended("");
+                      setClinicalSignificance("");
+                      setSampleRequirements("");
+                      setPreparation("");
+
+                      // Clear general content fields
+                      setDescription("");
+                      setFeatures("");
+                      setSpecifications("");
                     }}
                     className="w-full border p-3 rounded-lg"
                   >
@@ -2226,9 +2338,7 @@ export default function Dashboard() {
                   />
 
                   <label htmlFor="featured" className="font-medium">
-                    <label htmlFor="featured" className="font-medium">
-                      {category === "Lab-Tests" ? "⭐ Featured Test" : "⭐ Featured Product"}
-                    </label>
+                    {isLabTestCategory ? "⭐ Featured Test" : "⭐ Featured Product"}
                   </label>
                 </div>
                 <input

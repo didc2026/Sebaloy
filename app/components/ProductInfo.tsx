@@ -401,7 +401,9 @@ export default function ProductInfo({ product }: Props) {
 
           {product.strength && (
             <Accordion title="⚙️ Specification">
-              {product.strength}
+              <div className="whitespace-pre-line leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.strength}
+              </div>
             </Accordion>
           )}
 
@@ -446,6 +448,122 @@ export default function ProductInfo({ product }: Props) {
           {product.company && (
             <Accordion title="🏢 Manufacturer / Company">
               {product.company}
+            </Accordion>
+          )}
+        </>
+      )}
+
+      {/* =========================
+          ANIMAL FEED ADDITIVES
+      ========================== */}
+
+      {product.category === "Animal Feed Additives" && (
+        <>
+          {hasValue(product.brand) && (
+            <Accordion title="🏷️ Brand">
+              {product.brand}
+            </Accordion>
+          )}
+
+          {hasValue(product.company) && (
+            <Accordion title="🏢 Manufacturer / Company">
+              {product.company}
+            </Accordion>
+          )}
+
+          {hasValue(product.productType) && (
+            <Accordion title="🧪 Product Type">
+              {product.productType}
+            </Accordion>
+          )}
+
+          {hasValue(product.size) && (
+            <Accordion title="📏 Size / Pack Size">
+              {product.size}
+            </Accordion>
+          )}
+
+          {hasValue(product.activeIngredient) && (
+            <Accordion title="⚗️ Active Ingredient">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.activeIngredient}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.activeContent) && (
+            <Accordion title="📊 Active Content / Assay">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.activeContent}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.casNumber) && (
+            <Accordion title="🔢 CAS Number">
+              <div className="break-words text-sm sm:text-base text-slate-700">
+                {product.casNumber}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.chemicalFormula) && (
+            <Accordion title="🧬 Chemical Formula">
+              <div className="break-words text-sm sm:text-base text-slate-700">
+                {product.chemicalFormula}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.targetAnimal) && (
+            <Accordion title="🐄 Target Animal">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.targetAnimal}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.applicationPurpose) && (
+            <Accordion title="🎯 Application / Purpose">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.applicationPurpose}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.inclusionRate) && (
+            <Accordion title="📋 Recommended Inclusion Rate">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.inclusionRate}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.physicalForm) && (
+            <Accordion title="🔬 Physical Form">
+              {product.physicalForm}
+            </Accordion>
+          )}
+
+          {hasValue(product.countryOfOrigin) && (
+            <Accordion title="🌍 Country of Origin">
+              <div className="break-words text-sm sm:text-base text-slate-700">
+                {product.countryOfOrigin}
+              </div>
+            </Accordion>
+          )}
+
+          {hasValue(product.shelfLife) && (
+            <Accordion title="📦 Shelf Life / Best Before">
+              {product.shelfLife}
+            </Accordion>
+          )}
+
+          {hasValue(product.storageConditions) && (
+            <Accordion title="🗄️ Storage Conditions">
+              <div className="whitespace-pre-line break-words leading-6 sm:leading-7 text-sm sm:text-base text-slate-700">
+                {product.storageConditions}
+              </div>
             </Accordion>
           )}
         </>

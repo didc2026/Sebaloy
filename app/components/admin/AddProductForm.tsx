@@ -7,6 +7,7 @@ import PersonalCareFields from "@/app/components/admin/CategoryFields/PersonalCa
 import MedicalDeviceFields from "./CategoryFields/MedicalDeviceFields";
 import LabTestFields from "./CategoryFields/LabTestFields";
 import AnimalFeedAdditives from "./CategoryFields/AnimalFeedAdditives";
+import NutritionFields from "./CategoryFields/NutritionFields";
 
 type Props = {
   editingId: string;
@@ -589,6 +590,82 @@ export default function AddProductForm({
     const newCategory = e.target.value;
 
     setCategory(newCategory);
+
+    // Clear shared/category-specific fields when category changes.
+    setBrand("");
+    setCompany("");
+    setProductType("");
+    setSize("");
+    setStrength("");
+    setKeyIngredients("");
+    setSkinHairType("");
+    setCountryOfOrigin("");
+    setBenefits("");
+    setHowToUse("");
+    setIngredients("");
+    setShelfLife("");
+
+    setGenericName("");
+    setPharmacology("");
+    setIndication("");
+    setDosage("");
+    setAdministration("");
+    setSideEffects("");
+    setPrecautions("");
+    setPregnancyLactation("");
+    setDrugInteraction("");
+    setStorageInfo("");
+
+    setActiveIngredient("");
+    setActiveContent("");
+    setCasNumber("");
+    setChemicalFormula("");
+    setTargetAnimal("");
+    setApplicationPurpose("");
+    setInclusionRate("");
+    setPhysicalForm("");
+    setStorageConditions("");
+
+    setDescription("");
+    setFeatures("");
+    setSpecifications("");
+
+    setTestName("");
+    setShortName("");
+    setTestCategory("");
+    setTestCode("");
+    setClinicalSpecialty("");
+    setTargetDiseaseCondition("");
+    setSampleType("");
+    setPreparation("");
+    setSpecimen("");
+    setSampleVolume("");
+    setSampleCollectionInstructions("");
+    setSampleStabilityHandling("");
+    setFastingRequirement("");
+    setTestMethod("");
+    setTestPrinciple("");
+    setTestingPlatformAnalyzer("");
+    setReferenceRangeCutoff("");
+    setUnit("");
+    setResultType("");
+    setTurnaroundTime("");
+    setHomeSampleCollection("");
+    setSampleCollectionSchedule("");
+    setSpecialInstructions("");
+    setReportDelivery("");
+    setPartnerLaboratory("");
+    setBranchLocation("");
+    setPartnerLabTestCode("");
+    setPartnerLabPrice("");
+    setSebaloySellingPrice("");
+    setHomeCollectionCharge("");
+    setDiscountPromotionalPrice("");
+    setWhyThisTest("");
+    setWhenRecommended("");
+    setClinicalSignificance("");
+    setSampleRequirements("");
+    setPreparation("");
   };
   const normalizedCategory = category
     .trim()
@@ -617,12 +694,9 @@ export default function AddProductForm({
       {/* =========================
           BASIC PRODUCT INFORMATION
       ========================== */}
-      <div className="text-red-600 font-bold mb-2">
-        DEBUG CATEGORY: {category}
-      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Product Name - Hidden for Lab Tests */}
-        {category !== "lab-tests" && (
+        {!isLabTest && (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Product Name
@@ -781,6 +855,7 @@ export default function AddProductForm({
           DESCRIPTION
       ========================== */}
 
+{!["Nutrition", "Baby & Mom Care", "Healthcare"].includes(category) && (
       <div className="mt-6">
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Description
@@ -794,6 +869,7 @@ export default function AddProductForm({
           className="w-full border border-slate-300 rounded-xl px-4 py-3"
         />
       </div>
+      )}
 
       {/* =========================
           FEATURES
@@ -817,6 +893,7 @@ export default function AddProductForm({
           SPECIFICATIONS
       ========================== */}
 
+{category !== "Nutrition" && (
       <div className="mt-6">
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Specifications
@@ -832,6 +909,7 @@ export default function AddProductForm({
           className="w-full border border-slate-300 rounded-xl px-4 py-3"
         />
       </div>
+      )}
 
       {/* =========================
           MEDICINE
@@ -893,6 +971,8 @@ export default function AddProductForm({
             setStrength={setStrength}
             company={company}
             setCompany={setCompany}
+            description={description}
+            setDescription={setDescription}
           />
         </div>
       )}
@@ -912,6 +992,8 @@ export default function AddProductForm({
             setStrength={setStrength}
             company={company}
             setCompany={setCompany}
+            description={description}
+            setDescription={setDescription}
           />
         </div>
       )}
@@ -1184,6 +1266,8 @@ export default function AddProductForm({
 
           specifications={specifications}
           setSpecifications={setSpecifications}
+          description={description}
+          setDescription={setDescription}
         />
       )}
       {/* =========================
